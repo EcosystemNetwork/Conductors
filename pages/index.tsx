@@ -192,12 +192,14 @@ export default function Home() {
 
       <div className={s.container}>
         <header className={s.header}>
-          <div className={s.logo}>
-            <span className={s.logoIcon}>⬡</span>
-            <h1 className={s.title}>Claw Agent Network</h1>
+          <div className={s.headerLeft}>
+            <div className={s.logo}>
+              <span className={s.logoIcon}>⬡</span>
+              <h1 className={s.title}>Claw Agent Network</h1>
+            </div>
+            <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
           </div>
           <div className={s.headerRight}>
-            <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
             <button 
               className={s.plannerButton}
               onClick={() => router.push('/planner')}
