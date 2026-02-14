@@ -132,3 +132,10 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Next.js
+.next/
+out/
+node_modules/
+*.tsbuildinfo
+next-env.d.ts
