@@ -1,10 +1,42 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
 import Head from 'next/head';
 
+interface Agent {
+  id: string;
+  name: string;
+  skills: string[];
+  status: 'idle' | 'busy';
+  registeredAt: number;
+  tasksCompleted: number;
+  totalEarned: number;
+  walletAddress?: string;
+}
+
+interface Task {
+  id: string;
+  description: string;
+  requiredSkills: string[];
+  status: 'pending' | 'assigned' | 'completed' | 'failed';
+  assignedTo?: string;
+  createdAt: number;
+  completedAt?: number;
+  reward: number;
+}
+
+interface Payout {
+  id: string;
+  agentId: string;
+  taskId: string;
+  amount: number;
+  timestamp: number;
+  status: 'pending' | 'completed';
+  transactionHash?: string;
+}
+
 export default function Home() {
-  const [agents, setAgents] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [payouts, setPayouts] = useState([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Form states
@@ -47,7 +79,7 @@ export default function Home() {
   }, []);
 
   // Register agent
-  const handleRegisterAgent = async (e) => {
+  const handleRegisterAgent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await fetch('/api/agents/register', {
@@ -70,7 +102,7 @@ export default function Home() {
   };
 
   // Create task
-  const handleCreateTask = async (e) => {
+  const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await fetch('/api/tasks', {
@@ -93,7 +125,7 @@ export default function Home() {
   };
 
   // Complete task (for demo purposes)
-  const handleCompleteTask = async (taskId, agentId) => {
+  const handleCompleteTask = async (taskId: string, agentId: string) => {
     try {
       await fetch('/api/tasks/complete', {
         method: 'POST',
@@ -335,10 +367,10 @@ export default function Home() {
                         <td style={styles.td}>{assignedAgent?.name || '-'}</td>
                         <td style={styles.td}>{task.reward.toFixed(2)}</td>
                         <td style={styles.td}>
-                          {task.status === 'assigned' && (
+                          {task.status === 'assigned' && task.assignedTo && (
                             <button 
                               style={styles.smallButton}
-                              onClick={() => handleCompleteTask(task.id, task.assignedTo)}
+                              onClick={() => handleCompleteTask(task.id, task.assignedTo!)}
                             >
                               Complete
                             </button>

@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     // Create payout
-    const payoutId = `payout-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const payoutId = `payout-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const payout = {
       id: payoutId,
       agentId,
@@ -54,7 +54,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       amount: task.reward,
       timestamp: Date.now(),
       status: 'pending' as const,
-      transactionHash: `0x${Math.random().toString(16).substr(2, 64)}` // Simulated tx hash
+      transactionHash: `0x${Math.random().toString(16).substring(2, 66)}` // Simulated tx hash
     };
 
     dataStore.addPayout(payout);

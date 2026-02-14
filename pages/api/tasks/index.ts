@@ -15,7 +15,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Generate unique ID
-    const id = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `task-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     const task = {
       id,
