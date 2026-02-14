@@ -263,7 +263,7 @@ export default function Home() {
           <div className={s.headerLeft}>
             <div className={s.logo}>
               <img className={s.logoImage} src="/ConductorLogo.png" alt="Conductor logo" />
-              <h1 className={s.title}>Claw Agent Network</h1>
+              <h1 className={s.title}>Conductor Agent Network</h1>
             </div>
             <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
           </div>

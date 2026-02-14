@@ -34,8 +34,8 @@
 }
 
 .logoImage {
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   filter: drop-shadow(0 0 12px var(--accent-glow));
 }
