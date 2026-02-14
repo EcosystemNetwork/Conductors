@@ -1,7 +1,7 @@
 """
 Swarm Coordinator - Manages communication between leader and follower bots
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 from leader_bot import LeaderBot
 from follower_bot import FollowerBot
 from bot import Message
@@ -11,7 +11,7 @@ class SwarmCoordinator:
     """Coordinates communication between all bots in the swarm"""
     
     def __init__(self):
-        self.leader: LeaderBot = None
+        self.leader: Optional[LeaderBot] = None
         self.followers: Dict[str, FollowerBot] = {}
         self.message_log: List[Message] = []
     

@@ -125,8 +125,16 @@ def main():
     # Wait for some tasks to complete
     time.sleep(1)
     
-    # Simulate task completions
-    for i, follower_id in enumerate(list(coordinator.followers.keys())[:len(tasks)]):
+    # Simulate task completions for busy followers
+    # Only report completion for followers that were actually assigned tasks
+    busy_followers = [(fid, f) for fid, f in coordinator.followers.items() 
+                     if f.get_status()['status'] == 'idle' and fid in [fid for fid in coordinator.followers.keys()]]
+    
+    # In reality, we track which tasks were assigned
+    # For this demo, we match completed tasks to the number that were actually assigned
+    num_assigned = len(coordinator.leader.completed_tasks)
+    for i in range(min(len(tasks), len(coordinator.followers))):
+        follower_id = list(coordinator.followers.keys())[i]
         coordinator.report_task_complete(follower_id, tasks[i])
     
     print_separator()
