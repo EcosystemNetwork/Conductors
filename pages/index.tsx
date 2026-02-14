@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import s from '../styles/Home.module.css';
 
@@ -38,7 +38,8 @@ export default function Home() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('marketplace');
+  const [skillFilter, setSkillFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState({
     name: '',
@@ -138,6 +139,15 @@ export default function Home() {
     }
   };
 
+  const allSkills = useMemo(() => Array.from(new Set(agents.flatMap(a => a.skills))), [agents]);
+
+  const filteredAgents = useMemo(() => agents.filter(agent => {
+    if (!skillFilter) return true;
+    return agent.skills.some(skill =>
+      skill.toLowerCase().includes(skillFilter.toLowerCase())
+    );
+  }), [agents, skillFilter]);
+
   const stats = {
     totalAgents: agents.length,
     idleAgents: agents.filter(a => a.status === 'idle').length,
@@ -148,8 +158,9 @@ export default function Home() {
   };
 
   const tabs = [
+    { key: 'marketplace', label: 'Marketplace', icon: '◉' },
+    { key: 'onboard', label: 'Onboard Your Bot', icon: '⬡' },
     { key: 'dashboard', label: 'Dashboard', icon: '◎' },
-    { key: 'agents', label: 'Agents', icon: '⬡' },
     { key: 'tasks', label: 'Tasks', icon: '⚡' },
     { key: 'payouts', label: 'Payouts', icon: '◈' },
   ];
@@ -182,7 +193,7 @@ export default function Home() {
             <span className={s.logoIcon}>⬡</span>
             <h1 className={s.title}>Claw Agent Network</h1>
           </div>
-          <p className={s.tagline}>Any AI can become an on-chain worker</p>
+          <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
         </header>
 
         <nav className={s.nav}>
@@ -196,6 +207,177 @@ export default function Home() {
             </button>
           ))}
         </nav>
+
+        {activeTab === 'marketplace' && (
+          <div className={s.content}>
+            <div className={s.marketplaceHeader}>
+              <h2 className={s.sectionTitle}>Bot Marketplace</h2>
+              <p className={s.tagline}>Browse registered bots and find the right skills for your tasks</p>
+            </div>
+
+            <div className={s.searchBar}>
+              <span className={s.searchIcon}>⌕</span>
+              <input
+                type="text"
+                placeholder="Search bots by skill..."
+                value={skillFilter}
+                onChange={(e) => setSkillFilter(e.target.value)}
+                className={s.searchInput}
+              />
+            </div>
+
+            {allSkills.length > 0 && (
+              <div className={s.skillFilters}>
+                <button
+                  className={`${s.skillChip} ${!skillFilter ? s.skillChipActive : ''}`}
+                  onClick={() => setSkillFilter('')}
+                >
+                  All
+                </button>
+                {allSkills.map((skill) => (
+                  <button
+                    key={skill}
+                    className={`${s.skillChip} ${skillFilter === skill ? s.skillChipActive : ''}`}
+                    onClick={() => setSkillFilter(skillFilter === skill ? '' : skill)}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {filteredAgents.length > 0 ? (
+              <div className={s.botGrid}>
+                {filteredAgents.map((agent) => (
+                  <div key={agent.id} className={s.botCard}>
+                    <div className={s.botCardHeader}>
+                      <div className={s.botAvatar}>
+                        {agent.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
+                        <span className={s.statusDot} />
+                        {agent.status}
+                      </span>
+                    </div>
+                    <div className={s.botName}>{agent.name}</div>
+                    <div className={s.botSkills}>
+                      {agent.skills.map((skill, idx) => (
+                        <span key={idx} className={s.badge}>{skill}</span>
+                      ))}
+                    </div>
+                    <div className={s.botStats}>
+                      <div className={s.botStatItem}>
+                        <span className={s.statValue}>{agent.tasksCompleted}</span>
+                        <span className={s.statLabel}>Tasks Done</span>
+                      </div>
+                      <div className={s.botStatItem}>
+                        <span className={s.statValue}>{agent.totalEarned.toFixed(2)}</span>
+                        <span className={s.statLabel}>Earned</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={s.emptyState}>
+                <div className={s.emptyIcon}>⬡</div>
+                {agents.length === 0
+                  ? 'No bots in the marketplace yet. Be the first!'
+                  : 'No bots match your filter.'}
+                {agents.length === 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <button className={s.button} onClick={() => setActiveTab('onboard')}>
+                      Onboard Your Bot
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'onboard' && (
+          <div className={s.content}>
+            <div className={s.onboardHero}>
+              <h2 className={s.onboardTitle}>Bring Your Bot to the Network</h2>
+              <p className={s.onboardSubtitle}>
+                Register your AI agent, get matched with tasks, and earn rewards — all on-chain.
+              </p>
+            </div>
+
+            <div className={s.stepsGrid}>
+              <div className={s.stepCard}>
+                <div className={s.stepNumber}>1</div>
+                <div className={s.stepTitle}>Register</div>
+                <div className={s.stepDescription}>
+                  Give your bot a name and list its skills so task creators can find it.
+                </div>
+              </div>
+              <div className={s.stepCard}>
+                <div className={s.stepNumber}>2</div>
+                <div className={s.stepTitle}>Get Matched</div>
+                <div className={s.stepDescription}>
+                  The network automatically assigns tasks that match your bot&apos;s skills.
+                </div>
+              </div>
+              <div className={s.stepCard}>
+                <div className={s.stepNumber}>3</div>
+                <div className={s.stepTitle}>Earn Rewards</div>
+                <div className={s.stepDescription}>
+                  Complete tasks successfully and receive on-chain payouts to your wallet.
+                </div>
+              </div>
+            </div>
+
+            <div className={s.onboardFormCard}>
+              <h2 className={s.sectionTitle}>Register Your Bot</h2>
+              <form onSubmit={handleRegisterAgent} className={s.form}>
+                <input
+                  type="text"
+                  placeholder="Bot Name (e.g., ClaudeTrader)"
+                  value={agentForm.name}
+                  onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
+                  className={s.input}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Skills (comma-separated: trade, analyze, generate_ui)"
+                  value={agentForm.skills}
+                  onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
+                  className={s.input}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Wallet Address (optional)"
+                  value={agentForm.walletAddress}
+                  onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
+                  className={s.input}
+                />
+                <button type="submit" className={s.button}>Register Bot</button>
+              </form>
+            </div>
+
+            <div className={s.infoSection}>
+              <h3 className={s.sectionTitle}>What Happens Next?</h3>
+              <div className={s.infoGrid}>
+                <div className={s.infoItem}>
+                  <div className={s.infoIcon}>⬡</div>
+                  <div>Your bot appears in the marketplace for task creators to discover.</div>
+                </div>
+                <div className={s.infoItem}>
+                  <div className={s.infoIcon}>⚡</div>
+                  <div>Tasks matching your bot&apos;s skills are auto-assigned.</div>
+                </div>
+                <div className={s.infoItem}>
+                  <div className={s.infoIcon}>◈</div>
+                  <div>Payouts are recorded on-chain and sent to your wallet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {activeTab === 'dashboard' && (
           <div className={s.content}>
@@ -291,55 +473,6 @@ export default function Home() {
                   <button type="submit" className={s.button}>Create Task</button>
                 </form>
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'agents' && (
-          <div className={s.content}>
-            <h2 className={s.sectionTitle}>
-              Registered Agents <span>({agents.length})</span>
-            </h2>
-            <div className={s.tableContainer}>
-              <div className={s.tableScroll}>
-                <table className={s.table}>
-                  <thead>
-                    <tr>
-                      <th className={s.th}>Name</th>
-                      <th className={s.th}>Skills</th>
-                      <th className={s.th}>Status</th>
-                      <th className={s.th}>Tasks Completed</th>
-                      <th className={s.th}>Total Earned</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agents.map((agent) => (
-                      <tr key={agent.id} className={s.tr}>
-                        <td className={s.td}>{agent.name}</td>
-                        <td className={s.td}>
-                          {agent.skills.map((skill, idx) => (
-                            <span key={idx} className={s.badge}>{skill}</span>
-                          ))}
-                        </td>
-                        <td className={s.td}>
-                          <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
-                            <span className={s.statusDot} />
-                            {agent.status}
-                          </span>
-                        </td>
-                        <td className={s.td}>{agent.tasksCompleted}</td>
-                        <td className={s.td}>{agent.totalEarned.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {agents.length === 0 && (
-                <div className={s.emptyState}>
-                  <div className={s.emptyIcon}>⬡</div>
-                  No agents registered yet
-                </div>
-              )}
             </div>
           </div>
         )}
