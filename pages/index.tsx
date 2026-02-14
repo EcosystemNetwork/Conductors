@@ -248,6 +248,7 @@ export default function Home() {
         <title>Claw Agent Network - Bring Your Own AI Agent</title>
         <meta name="description" content="Any AI can become an on-chain worker" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
 
       <div className={s.bgGlow} />
@@ -256,7 +257,7 @@ export default function Home() {
         <header className={s.header}>
           <div className={s.headerLeft}>
             <div className={s.logo}>
-              <span className={s.logoIcon}>⬡</span>
+              <img className={s.logoImage} src="/protocol-logo.svg" alt="Protocol logo" />
               <h1 className={s.title}>Claw Agent Network</h1>
             </div>
             <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>

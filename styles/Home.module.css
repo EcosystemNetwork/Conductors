@@ -33,8 +33,10 @@
   gap: 12px;
 }
 
-.logoIcon {
-  font-size: 2.4rem;
+.logoImage {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
   filter: drop-shadow(0 0 12px var(--accent-glow));
 }
 

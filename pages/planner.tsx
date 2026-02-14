@@ -233,6 +233,7 @@ export default function SwarmPlanner() {
         <title>Swarm Task Planner - Claw Agent Network</title>
         <meta name="description" content="Plan and manage swarm tasks" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
 
       <div className={s.container}>
@@ -241,7 +242,7 @@ export default function SwarmPlanner() {
             <button onClick={() => router.push('/')} className={s.backButton}>
               ← Back to Home
             </button>
-            <h1 className={s.title}>⬡ Swarm Task Planner</h1>
+            <h1 className={s.title}><img className={s.titleLogo} src="/protocol-logo.svg" alt="Protocol logo" /> Swarm Task Planner</h1>
           </div>
           <div className={s.headerRight}>
             <div className={s.costBadge}>
