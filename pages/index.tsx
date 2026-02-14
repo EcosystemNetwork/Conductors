@@ -141,12 +141,13 @@ export default function Home() {
 
   const allSkills = useMemo(() => Array.from(new Set(agents.flatMap(a => a.skills))), [agents]);
 
-  const filteredAgents = useMemo(() => agents.filter(agent => {
-    if (!skillFilter) return true;
-    return agent.skills.some(skill =>
-      skill.toLowerCase().includes(skillFilter.toLowerCase())
+  const filteredAgents = useMemo(() => {
+    if (!skillFilter) return agents;
+    const lowerFilter = skillFilter.toLowerCase();
+    return agents.filter(agent =>
+      agent.skills.some(skill => skill.toLowerCase().includes(lowerFilter))
     );
-  }), [agents, skillFilter]);
+  }, [agents, skillFilter]);
 
   const stats = {
     totalAgents: agents.length,
