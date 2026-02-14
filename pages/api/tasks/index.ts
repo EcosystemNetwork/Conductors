@@ -5,12 +5,19 @@ import { TaskDispatcher } from '../../../lib/taskDispatcher';
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     // Create a new task
-    const { description, requiredSkills, reward } = req.body;
+    const { description, requiredSkills, reward, priority, maxRetries } = req.body;
 
     // Validate input
     if (!description || !requiredSkills || !Array.isArray(requiredSkills)) {
       return res.status(400).json({ 
         error: 'Invalid input. Required: description (string), requiredSkills (array)' 
+      });
+    }
+
+    // Validate priority if provided
+    if (priority !== undefined && (priority < 1 || priority > 5)) {
+      return res.status(400).json({
+        error: 'Priority must be between 1 (highest) and 5 (lowest)'
       });
     }
 
@@ -23,7 +30,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       requiredSkills,
       status: 'pending' as const,
       createdAt: Date.now(),
-      reward: reward || 10 // Default reward
+      reward: reward || 10, // Default reward
+      priority: priority || 3, // Default priority (medium)
+      maxRetries: maxRetries || 3, // Default max retries
+      retryCount: 0
     };
 
     dataStore.addTask(task);
