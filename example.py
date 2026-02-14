@@ -127,8 +127,7 @@ def main():
     
     # Simulate task completions
     for i, follower_id in enumerate(list(coordinator.followers.keys())[:len(tasks)]):
-        if i < len(tasks):
-            coordinator.report_task_complete(follower_id, tasks[i])
+        coordinator.report_task_complete(follower_id, tasks[i])
     
     print_separator()
     

@@ -22,9 +22,10 @@ class BotStatus(Enum):
 
 class Message:
     """Message structure for communication between bots"""
-    def __init__(self, sender_id: str, msg_type: str, content: Dict[str, Any]):
+    def __init__(self, sender_id: str, recipient_id: str, msg_type: str, content: Dict[str, Any]):
         self.id = str(uuid.uuid4())
         self.sender_id = sender_id
+        self.recipient_id = recipient_id
         self.msg_type = msg_type
         self.content = content
         self.timestamp = time.time()
@@ -33,6 +34,7 @@ class Message:
         return {
             'id': self.id,
             'sender_id': self.sender_id,
+            'recipient_id': self.recipient_id,
             'msg_type': self.msg_type,
             'content': self.content,
             'timestamp': self.timestamp
@@ -42,6 +44,7 @@ class Message:
     def from_dict(cls, data: Dict[str, Any]) -> 'Message':
         msg = cls(
             sender_id=data['sender_id'],
+            recipient_id=data['recipient_id'],
             msg_type=data['msg_type'],
             content=data['content']
         )
@@ -61,7 +64,7 @@ class Bot:
         
     def send_message(self, recipient_id: str, msg_type: str, content: Dict[str, Any]) -> Message:
         """Send a message to another bot"""
-        message = Message(self.bot_id, msg_type, content)
+        message = Message(self.bot_id, recipient_id, msg_type, content)
         return message
     
     def receive_message(self, message: Message):

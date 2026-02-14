@@ -84,14 +84,15 @@ class FollowerBot(Bot):
             if message.sender_id == self.leader_id:
                 task = message.content
                 self.execute_task(task)
-                # Report completion
-                completion_msg = self.report_task_complete(task)
-                # In a real system, this would be sent back to the leader
-                print(f"[{self.name}] Reporting task completion")
+                # Note: In this synchronous simulation, task completion is reported
+                # via coordinator.report_task_complete(). In a real async system,
+                # this message would be sent back to the coordinator/leader here.
+                print(f"[{self.name}] Task execution complete")
             else:
                 print(f"[{self.name}] Ignoring task from non-leader: {message.sender_id}")
         
         elif message.msg_type == 'status_request':
             if message.sender_id == self.leader_id:
                 status_msg = self.send_status_update(self.status)
-                print(f"[{self.name}] Sent status update to leader")
+                # Note: In a real system, this would be sent via the coordinator
+                print(f"[{self.name}] Status update prepared")

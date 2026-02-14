@@ -47,17 +47,13 @@ class SwarmCoordinator:
         """Route a message to its intended recipient"""
         self.message_log.append(message)
         
-        # Find recipient
-        if self.leader and message.sender_id != self.leader.bot_id:
+        # Route to the intended recipient
+        if self.leader and message.recipient_id == self.leader.bot_id:
             # Message to leader
             self.leader.receive_message(message)
-        
-        # Check if message is for a follower
-        for follower_id, follower in self.followers.items():
-            if follower_id != message.sender_id:
-                # This is a simple broadcast approach
-                # In a real system, messages would have explicit recipients
-                pass
+        elif message.recipient_id in self.followers:
+            # Message to a specific follower
+            self.followers[message.recipient_id].receive_message(message)
     
     def assign_task_from_leader(self, follower_id: str, task: Dict):
         """Leader assigns task to specific follower"""
@@ -78,12 +74,10 @@ class SwarmCoordinator:
         
         messages = self.leader.broadcast_task(task)
         for message in messages:
-            # Find the follower this message is for
-            for follower_id, follower in self.followers.items():
-                if follower.get_status()['status'] == 'busy':
-                    # Assume this follower was just assigned
-                    follower.receive_message(message)
-                    break
+            # Route message to its intended recipient
+            if message.recipient_id in self.followers:
+                self.followers[message.recipient_id].receive_message(message)
+                self.message_log.append(message)
     
     def report_task_complete(self, follower_id: str, task: Dict):
         """Follower reports task completion to leader"""
@@ -115,8 +109,7 @@ class SwarmCoordinator:
         
         messages = self.leader.process_task_queue()
         for message in messages:
-            # Route messages to appropriate followers
-            for follower_id, follower in self.followers.items():
-                if follower.get_status()['status'] == 'busy':
-                    follower.receive_message(message)
-                    break
+            # Route messages to their intended recipients
+            if message.recipient_id in self.followers:
+                self.followers[message.recipient_id].receive_message(message)
+                self.message_log.append(message)
