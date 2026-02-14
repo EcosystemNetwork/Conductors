@@ -37,6 +37,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     completedAt: Date.now()
   });
 
+  // Add completed/failed task to history
+  const updatedTask = dataStore.getTask(taskId);
+  if (updatedTask) {
+    dataStore.addToTaskHistory(updatedTask);
+  }
+
   // Update agent
   if (success !== false) {
     dataStore.updateAgent(agentId, {
@@ -71,11 +77,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       payout
     });
   } else {
+    // Task failed - attempt retry if within retry limit
     dataStore.updateAgent(agentId, { status: 'idle' });
+    
+    const retried = dataStore.incrementTaskRetry(taskId);
+    const retriedTask = dataStore.getTask(taskId);
+    
     return res.status(200).json({ 
       success: true,
-      task: dataStore.getTask(taskId),
-      agent: dataStore.getAgent(agentId)
+      task: retriedTask,
+      agent: dataStore.getAgent(agentId),
+      retried,
+      message: retried ? 'Task will be retried' : 'Task failed - max retries reached'
     });
   }
 }

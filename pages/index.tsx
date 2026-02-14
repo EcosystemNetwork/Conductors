@@ -7,11 +7,13 @@ interface Agent {
   id: string;
   name: string;
   skills: string[];
-  status: 'idle' | 'busy';
+  status: 'idle' | 'busy' | 'offline';
   registeredAt: number;
   tasksCompleted: number;
   totalEarned: number;
   walletAddress?: string;
+  lastHeartbeat?: number;
+  health?: 'healthy' | 'degraded' | 'unhealthy';
 }
 
 interface Task {
@@ -23,6 +25,10 @@ interface Task {
   createdAt: number;
   completedAt?: number;
   reward: number;
+  priority?: number;
+  retryCount?: number;
+  maxRetries?: number;
+  lastAttemptAt?: number;
 }
 
 interface Payout {
@@ -40,6 +46,7 @@ export default function Home() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [taskHistory, setTaskHistory] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
 
@@ -51,24 +58,29 @@ export default function Home() {
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
-    reward: '10'
+    reward: '10',
+    priority: '3',
+    maxRetries: '3'
   });
 
   const fetchData = async () => {
     try {
-      const [agentsRes, tasksRes, payoutsRes] = await Promise.all([
+      const [agentsRes, tasksRes, payoutsRes, historyRes] = await Promise.all([
         fetch('/api/agents/register'),
         fetch('/api/tasks'),
-        fetch('/api/payouts')
+        fetch('/api/payouts'),
+        fetch('/api/tasks/history')
       ]);
 
       const agentsData = await agentsRes.json();
       const tasksData = await tasksRes.json();
       const payoutsData = await payoutsRes.json();
+      const historyData = await historyRes.json();
 
       setAgents(agentsData.agents || []);
       setTasks(tasksData.tasks || []);
       setPayouts(payoutsData.payouts || []);
+      setTaskHistory(historyData.history || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -111,12 +123,14 @@ export default function Home() {
         body: JSON.stringify({
           description: taskForm.description,
           requiredSkills: taskForm.requiredSkills.split(',').map(s => s.trim()),
-          reward: parseFloat(taskForm.reward)
+          reward: parseFloat(taskForm.reward),
+          priority: parseInt(taskForm.priority),
+          maxRetries: parseInt(taskForm.maxRetries)
         })
       });
 
       if (response.ok) {
-        setTaskForm({ description: '', requiredSkills: '', reward: '10' });
+        setTaskForm({ description: '', requiredSkills: '', reward: '10', priority: '3', maxRetries: '3' });
         fetchData();
       }
     } catch (error) {
@@ -154,10 +168,19 @@ export default function Home() {
   const stats = {
     totalAgents: agents.length,
     idleAgents: agents.filter(a => a.status === 'idle').length,
+    busyAgents: agents.filter(a => a.status === 'busy').length,
+    offlineAgents: agents.filter(a => a.status === 'offline').length,
+    healthyAgents: agents.filter(a => a.health === 'healthy').length,
+    degradedAgents: agents.filter(a => a.health === 'degraded').length,
+    unhealthyAgents: agents.filter(a => a.health === 'unhealthy').length,
     totalTasks: tasks.length,
     pendingTasks: tasks.filter(t => t.status === 'pending').length,
+    assignedTasks: tasks.filter(t => t.status === 'assigned').length,
     completedTasks: tasks.filter(t => t.status === 'completed').length,
-    totalPayouts: payouts.reduce((sum, p) => sum + p.amount, 0)
+    failedTasks: tasks.filter(t => t.status === 'failed').length,
+    highPriorityTasks: tasks.filter(t => (t.priority || 3) <= 2).length,
+    totalPayouts: payouts.reduce((sum, p) => sum + p.amount, 0),
+    taskHistoryTotal: taskHistory.length
   };
 
   const tabs = [
@@ -165,6 +188,7 @@ export default function Home() {
     { key: 'onboard', label: 'Onboard Your Bot', icon: '⬡' },
     { key: 'dashboard', label: 'Dashboard', icon: '◎' },
     { key: 'tasks', label: 'Tasks', icon: '⚡' },
+    { key: 'history', label: 'History', icon: '📋' },
     { key: 'payouts', label: 'Payouts', icon: '◈' },
   ];
 
@@ -172,11 +196,49 @@ export default function Home() {
     switch (status) {
       case 'idle': return s.statusIdle;
       case 'busy': return s.statusBusy;
+      case 'offline': return s.statusOffline;
       case 'pending': return s.statusPending;
       case 'assigned': return s.statusAssigned;
       case 'completed': return s.statusCompleted;
       case 'failed': return s.statusFailed;
       default: return s.statusPending;
+    }
+  };
+
+  const getHealthBadge = (health?: string) => {
+    if (!health) return null;
+    const healthColors = {
+      healthy: '🟢',
+      degraded: '🟡',
+      unhealthy: '🔴'
+    };
+    return healthColors[health as keyof typeof healthColors] || '';
+  };
+
+  const getPriorityLabel = (priority?: number) => {
+    if (!priority) return 'Medium';
+    if (priority <= 2) return 'High';
+    if (priority >= 4) return 'Low';
+    return 'Medium';
+  };
+
+  const getPriorityColor = (priority?: number) => {
+    if (!priority) return '#f59e0b';
+    if (priority <= 2) return '#ef4444';
+    if (priority >= 4) return '#10b981';
+    return '#f59e0b';
+  };
+
+  const handleRetryTask = async (taskId: string) => {
+    try {
+      await fetch('/api/tasks/retry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId })
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error retrying task:', error);
     }
   };
 
@@ -267,10 +329,17 @@ export default function Home() {
                       <div className={s.botAvatar}>
                         {agent.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
-                        <span className={s.statusDot} />
-                        {agent.status}
-                      </span>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {agent.health && (
+                          <span title={`Health: ${agent.health}`} style={{ fontSize: '12px' }}>
+                            {getHealthBadge(agent.health)}
+                          </span>
+                        )}
+                        <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
+                          <span className={s.statusDot} />
+                          {agent.status}
+                        </span>
+                      </div>
                     </div>
                     <div className={s.botName}>{agent.name}</div>
                     <div className={s.botSkills}>
@@ -401,7 +470,15 @@ export default function Home() {
                 <div className={s.statLabel}>Total Agents</div>
                 <div className={s.statSubtext}>
                   <span className={s.statusDot} style={{ color: 'var(--success)' }} />
-                  {stats.idleAgents} idle
+                  {stats.idleAgents} idle, {stats.busyAgents} busy, {stats.offlineAgents} offline
+                </div>
+              </div>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>🏥</div>
+                <div className={s.statValue}>{stats.healthyAgents}</div>
+                <div className={s.statLabel}>Healthy Agents</div>
+                <div className={s.statSubtext}>
+                  🟡 {stats.degradedAgents} degraded, 🔴 {stats.unhealthyAgents} unhealthy
                 </div>
               </div>
               <div className={s.statCard}>
@@ -410,13 +487,24 @@ export default function Home() {
                 <div className={s.statLabel}>Total Tasks</div>
                 <div className={s.statSubtext}>
                   <span className={s.statusDot} style={{ color: 'var(--info)' }} />
-                  {stats.pendingTasks} pending
+                  {stats.pendingTasks} pending, {stats.assignedTasks} assigned
+                </div>
+              </div>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>🔥</div>
+                <div className={s.statValue}>{stats.highPriorityTasks}</div>
+                <div className={s.statLabel}>High Priority</div>
+                <div className={s.statSubtext}>
+                  Tasks requiring immediate attention
                 </div>
               </div>
               <div className={s.statCard}>
                 <div className={s.statIcon}>✓</div>
                 <div className={s.statValue}>{stats.completedTasks}</div>
                 <div className={s.statLabel}>Completed</div>
+                <div className={s.statSubtext}>
+                  ❌ {stats.failedTasks} failed
+                </div>
               </div>
               <div className={s.statCard}>
                 <div className={s.statIcon}>◈</div>
@@ -483,6 +571,38 @@ export default function Home() {
                     className={s.input}
                     required
                   />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
+                        Priority (1=High, 5=Low)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        placeholder="Priority"
+                        value={taskForm.priority}
+                        onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
+                        className={s.input}
+                        required
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
+                        Max Retries
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        placeholder="Max Retries"
+                        value={taskForm.maxRetries}
+                        onChange={(e) => setTaskForm({ ...taskForm, maxRetries: e.target.value })}
+                        className={s.input}
+                        required
+                      />
+                    </div>
+                  </div>
                   <button type="submit" className={s.button}>Create Task</button>
                 </form>
               </div>
@@ -501,10 +621,12 @@ export default function Home() {
                   <thead>
                     <tr>
                       <th className={s.th}>Description</th>
-                      <th className={s.th}>Required Skills</th>
+                      <th className={s.th}>Skills</th>
+                      <th className={s.th}>Priority</th>
                       <th className={s.th}>Status</th>
                       <th className={s.th}>Assigned To</th>
                       <th className={s.th}>Reward</th>
+                      <th className={s.th}>Retries</th>
                       <th className={s.th}>Actions</th>
                     </tr>
                   </thead>
@@ -520,6 +642,18 @@ export default function Home() {
                             ))}
                           </td>
                           <td className={s.td}>
+                            <span style={{ 
+                              padding: '2px 8px', 
+                              borderRadius: '4px', 
+                              fontSize: '11px',
+                              backgroundColor: getPriorityColor(task.priority) + '20',
+                              color: getPriorityColor(task.priority),
+                              fontWeight: 'bold'
+                            }}>
+                              {getPriorityLabel(task.priority)}
+                            </span>
+                          </td>
+                          <td className={s.td}>
                             <span className={`${s.statusBadge} ${getStatusClass(task.status)}`}>
                               <span className={s.statusDot} />
                               {task.status}
@@ -528,12 +662,24 @@ export default function Home() {
                           <td className={s.td}>{assignedAgent?.name || '—'}</td>
                           <td className={s.td}>{task.reward.toFixed(2)}</td>
                           <td className={s.td}>
+                            {task.retryCount !== undefined ? `${task.retryCount}/${task.maxRetries || 3}` : '—'}
+                          </td>
+                          <td className={s.td}>
                             {task.status === 'assigned' && task.assignedTo && (
                               <button
                                 className={s.smallButton}
                                 onClick={() => handleCompleteTask(task.id, task.assignedTo!)}
                               >
                                 Complete
+                              </button>
+                            )}
+                            {task.status === 'failed' && (task.retryCount || 0) < (task.maxRetries || 3) && (
+                              <button
+                                className={s.smallButton}
+                                onClick={() => handleRetryTask(task.id)}
+                                style={{ backgroundColor: 'var(--warning)' }}
+                              >
+                                Retry
                               </button>
                             )}
                           </td>
@@ -600,6 +746,69 @@ export default function Home() {
                 <div className={s.emptyState}>
                   <div className={s.emptyIcon}>◈</div>
                   No payouts yet
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className={s.content}>
+            <h2 className={s.sectionTitle}>
+              Task History <span>({taskHistory.length})</span>
+            </h2>
+            <div className={s.tableContainer}>
+              <div className={s.tableScroll}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th className={s.th}>Description</th>
+                      <th className={s.th}>Priority</th>
+                      <th className={s.th}>Status</th>
+                      <th className={s.th}>Agent</th>
+                      <th className={s.th}>Reward</th>
+                      <th className={s.th}>Completed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {taskHistory.map((task) => {
+                      const assignedAgent = agents.find(a => a.id === task.assignedTo);
+                      return (
+                        <tr key={task.id} className={s.tr}>
+                          <td className={s.td}>{task.description}</td>
+                          <td className={s.td}>
+                            <span style={{ 
+                              padding: '2px 8px', 
+                              borderRadius: '4px', 
+                              fontSize: '11px',
+                              backgroundColor: getPriorityColor(task.priority) + '20',
+                              color: getPriorityColor(task.priority),
+                              fontWeight: 'bold'
+                            }}>
+                              {getPriorityLabel(task.priority)}
+                            </span>
+                          </td>
+                          <td className={s.td}>
+                            <span className={`${s.statusBadge} ${getStatusClass(task.status)}`}>
+                              <span className={s.statusDot} />
+                              {task.status}
+                            </span>
+                          </td>
+                          <td className={s.td}>{assignedAgent?.name || '—'}</td>
+                          <td className={s.td}>{task.reward.toFixed(2)}</td>
+                          <td className={s.td}>
+                            {task.completedAt ? new Date(task.completedAt).toLocaleString() : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {taskHistory.length === 0 && (
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>📋</div>
+                  No task history yet
                 </div>
               )}
             </div>

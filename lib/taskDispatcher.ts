@@ -48,6 +48,7 @@ export class TaskDispatcher {
   /**
    * Get the next available (pending) task for a specific agent based on skills.
    * Automatically assigns the task if found.
+   * Tasks are prioritized by priority level (1 highest, 5 lowest).
    */
   static getNextTaskForAgent(agentId: string) {
     const agent = dataStore.getAgent(agentId);
@@ -56,16 +57,50 @@ export class TaskDispatcher {
     const tasks = dataStore.getAllTasks();
     const pendingTasks = tasks.filter(t => t.status === 'pending');
 
-    // Find a task that matches the agent's skills
-    const matchingTask = pendingTasks.find(task =>
+    // Find tasks that match the agent's skills
+    const matchingTasks = pendingTasks.filter(task =>
       task.requiredSkills.some(skill => agent.skills.includes(skill))
     );
 
-    if (matchingTask) {
-      this.assignTask(matchingTask.id, agentId);
-      return dataStore.getTask(matchingTask.id);
-    }
+    if (matchingTasks.length === 0) return null;
 
-    return null;
+    // Sort by priority (lower number = higher priority), then by creation time
+    matchingTasks.sort((a, b) => {
+      const priorityA = a.priority || 3;
+      const priorityB = b.priority || 3;
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      return a.createdAt - b.createdAt;
+    });
+
+    const matchingTask = matchingTasks[0];
+    this.assignTask(matchingTask.id, agentId);
+    return dataStore.getTask(matchingTask.id);
+  }
+
+  /**
+   * Retry a failed task by resetting it to pending status.
+   * Returns true if retry is allowed, false if max retries exceeded.
+   */
+  static retryTask(taskId: string): boolean {
+    return dataStore.incrementTaskRetry(taskId);
+  }
+
+  /**
+   * Get pending tasks sorted by priority.
+   */
+  static getPendingTasksByPriority() {
+    const tasks = dataStore.getAllTasks();
+    return tasks
+      .filter(t => t.status === 'pending')
+      .sort((a, b) => {
+        const priorityA = a.priority || 3;
+        const priorityB = b.priority || 3;
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+        return a.createdAt - b.createdAt;
+      });
   }
 }

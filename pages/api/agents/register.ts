@@ -24,7 +24,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       registeredAt: Date.now(),
       tasksCompleted: 0,
       totalEarned: 0,
-      walletAddress
+      walletAddress,
+      lastHeartbeat: Date.now(),
+      health: 'healthy' as const
     };
 
     dataStore.addAgent(agent);

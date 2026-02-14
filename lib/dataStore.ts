@@ -2,11 +2,13 @@ interface Agent {
   id: string;
   name: string;
   skills: string[];
-  status: 'idle' | 'busy';
+  status: 'idle' | 'busy' | 'offline';
   registeredAt: number;
   tasksCompleted: number;
   totalEarned: number;
   walletAddress?: string;
+  lastHeartbeat?: number;
+  health?: 'healthy' | 'degraded' | 'unhealthy';
 }
 
 interface Task {
@@ -18,6 +20,10 @@ interface Task {
   createdAt: number;
   completedAt?: number;
   reward: number;
+  priority?: number; // 1 (highest) to 5 (lowest), default 3
+  retryCount?: number;
+  maxRetries?: number;
+  lastAttemptAt?: number;
 }
 
 interface Payout {
@@ -34,6 +40,7 @@ class DataStore {
   private agents: Map<string, Agent> = new Map();
   private tasks: Map<string, Task> = new Map();
   private payouts: Map<string, Payout> = new Map();
+  private taskHistory: Map<string, Task> = new Map();
 
   // Agent methods
   addAgent(agent: Agent): void {
@@ -89,6 +96,81 @@ class DataStore {
     if (payout) {
       this.payouts.set(id, { ...payout, ...updates });
     }
+  }
+
+  // Task history methods
+  addToTaskHistory(task: Task): void {
+    this.taskHistory.set(task.id, { ...task });
+  }
+
+  getTaskHistory(): Task[] {
+    return Array.from(this.taskHistory.values()).sort((a, b) => 
+      (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt)
+    );
+  }
+
+  // Health monitoring methods
+  updateAgentHeartbeat(agentId: string): void {
+    const agent = this.agents.get(agentId);
+    if (agent) {
+      const now = Date.now();
+      this.agents.set(agentId, { 
+        ...agent, 
+        lastHeartbeat: now,
+        health: 'healthy'
+      });
+    }
+  }
+
+  checkAgentHealth(): void {
+    const now = Date.now();
+    const healthTimeout = 30000; // 30 seconds
+    const degradedTimeout = 15000; // 15 seconds
+
+    this.agents.forEach((agent, id) => {
+      if (!agent.lastHeartbeat) return;
+      
+      const timeSinceHeartbeat = now - agent.lastHeartbeat;
+      let health: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+      let status = agent.status;
+
+      if (timeSinceHeartbeat > healthTimeout) {
+        health = 'unhealthy';
+        status = 'offline';
+      } else if (timeSinceHeartbeat > degradedTimeout) {
+        health = 'degraded';
+      }
+
+      if (health !== agent.health || status !== agent.status) {
+        this.agents.set(id, { ...agent, health, status });
+      }
+    });
+  }
+
+  // Task retry methods
+  incrementTaskRetry(taskId: string): boolean {
+    const task = this.tasks.get(taskId);
+    if (!task) return false;
+
+    const retryCount = (task.retryCount || 0) + 1;
+    const maxRetries = task.maxRetries || 3;
+
+    if (retryCount > maxRetries) {
+      this.updateTask(taskId, { 
+        status: 'failed', 
+        retryCount,
+        lastAttemptAt: Date.now()
+      });
+      return false;
+    }
+
+    this.updateTask(taskId, { 
+      status: 'pending', 
+      assignedTo: undefined,
+      retryCount,
+      lastAttemptAt: Date.now()
+    });
+    return true;
   }
 }
 
