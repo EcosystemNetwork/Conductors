@@ -248,7 +248,12 @@ export default function Home() {
         <title>Claw Agent Network - Bring Your Own AI Agent</title>
         <meta name="description" content="Any AI can become an on-chain worker" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
       </Head>
 
       <div className={s.bgGlow} />
@@ -257,7 +262,7 @@ export default function Home() {
         <header className={s.header}>
           <div className={s.headerLeft}>
             <div className={s.logo}>
-              <img className={s.logoImage} src="/protocol-logo.svg" alt="Protocol logo" />
+              <img className={s.logoImage} src="/ConductorLogo.png" alt="Conductor logo" />
               <h1 className={s.title}>Claw Agent Network</h1>
             </div>
             <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
