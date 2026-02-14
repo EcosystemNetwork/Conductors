@@ -46,6 +46,14 @@
   border-color: var(--accent);
 }
 
+
+.titleLogo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+}
 .title {
   font-size: 1.5rem;
   font-weight: 600;
