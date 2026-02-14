@@ -17,6 +17,17 @@ This repository now includes a complete web application for managing AI agents, 
 - ✅ **Live Dashboard** - Real-time monitoring and management UI
 - ✅ **Vercel Ready** - Deploy with zero configuration
 
+### New Features (2026)
+
+- 🎯 **Task Priority System** - Assign priority levels (1-5) to tasks for intelligent scheduling
+- 🔄 **Task Retry Mechanism** - Configurable automatic retry with max retry limits
+- 🏥 **Health Monitoring** - Real-time agent health tracking with heartbeat system
+- 📊 **Task History** - Complete historical record of all completed and failed tasks
+- 🌐 **Network Communication** - TCP/UDP support for distributed bot swarms
+- 🔌 **WebSocket Support** - Real-time updates for task assignments and completions
+- 🎮 **Remote Control API** - Control agents remotely via REST API
+- 📈 **Enhanced Dashboard** - Visual indicators for health, priority, and retry status
+
 ---
 
 ## Python Bot Swarm System
@@ -303,14 +314,14 @@ Add new task types by extending the task dictionary structure and implementing h
 
 ## Roadmap
 
-- [ ] Network-based communication (TCP/UDP)
-- [ ] REST API for remote control
-- [ ] Task priority system
-- [ ] Bot health monitoring
-- [ ] Task retry mechanism
-- [ ] Visualization dashboard
-- [ ] Persistent task history
-- [ ] Multi-leader support for large swarms
+- [x] **Network-based communication (TCP/UDP)** - Python module for TCP/UDP bot communication
+- [x] **REST API for remote control** - Full REST API with agent control endpoints
+- [x] **Task priority system** - Priority levels 1-5 with automatic sorting
+- [x] **Bot health monitoring** - Heartbeat tracking and health status (healthy/degraded/unhealthy)
+- [x] **Task retry mechanism** - Configurable retry limits with automatic retry logic
+- [x] **Visualization dashboard** - Enhanced dashboard with health, priority, and history views
+- [x] **Persistent task history** - Complete task history tracking with timestamps
+- [ ] **Multi-leader support for large swarms** - Distributed leader architecture (coming soon)
 
 ## Web Platform Architecture
 
