@@ -1,0 +1,34 @@
+/* React Flow Global Styles */
+.react-flow__node.selected {
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent) !important;
+}
+
+.react-flow__handle {
+  background: var(--accent) !important;
+  border: 2px solid white !important;
+}
+
+.react-flow__controls {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-glass) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--accent) !important;
+}
+
+.react-flow__background {
+  background: var(--bg-primary) !important;
+}

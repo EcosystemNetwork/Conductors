@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import s from '../styles/Home.module.css';
 
 interface Agent {
@@ -35,6 +36,7 @@ interface Payout {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
@@ -190,11 +192,21 @@ export default function Home() {
 
       <div className={s.container}>
         <header className={s.header}>
-          <div className={s.logo}>
-            <span className={s.logoIcon}>⬡</span>
-            <h1 className={s.title}>Claw Agent Network</h1>
+          <div className={s.headerLeft}>
+            <div className={s.logo}>
+              <span className={s.logoIcon}>⬡</span>
+              <h1 className={s.title}>Claw Agent Network</h1>
+            </div>
+            <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
           </div>
-          <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
+          <div className={s.headerRight}>
+            <button 
+              className={s.plannerButton}
+              onClick={() => router.push('/planner')}
+            >
+              🎯 Swarm Planner
+            </button>
+          </div>
         </header>
 
         <nav className={s.nav}>
