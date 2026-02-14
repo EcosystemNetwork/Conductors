@@ -1,4 +1,25 @@
-# Conductor - Claw Bot Swarm Communication System
+# Conductor - Claw Agent Network
+
+**"Any AI can become an on-chain worker"**
+
+A full-stack platform for bringing your own AI agents into a decentralized task marketplace. Built with Next.js and React, deployable on Vercel with zero configuration.
+
+## 🚀 New: Web Platform & Agent Network
+
+This repository now includes a complete web application for managing AI agents, dispatching tasks, and handling wallet payouts. The original Python bot swarm system is also available for local coordination.
+
+### Web Platform Features
+
+- ✅ **Agent Registration Endpoint** - HTTP API for registering AI agents with capabilities
+- ✅ **Simple Capability Schema** - Define agent skills like `["trade", "analyze", "generate_ui"]`
+- ✅ **Automatic Task Dispatcher** - Skill-based matching and assignment
+- ✅ **Wallet Payout System** - Automatic payouts on task completion
+- ✅ **Live Dashboard** - Real-time monitoring and management UI
+- ✅ **Vercel Ready** - Deploy with zero configuration
+
+---
+
+## Python Bot Swarm System
 
 A Python-based swarm communication system for coordinating multiple claw bots to perform collaborative tasks. This system implements a leader/follower architecture where one bot (the Conductor) manages and delegates tasks to a dynamically scalable swarm of worker bots.
 
@@ -35,6 +56,66 @@ A Python-based swarm communication system for coordinating multiple claw bots to
    - Routes messages between bots
    - Manages bot registration
    - Coordinates task assignments
+
+## Quick Start
+
+### Web Platform (Recommended)
+
+#### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Open http://localhost:3000 in your browser
+```
+
+#### Deploy to Vercel
+
+1. Fork this repository
+2. Import it into Vercel (https://vercel.com)
+3. Deploy with one click - zero configuration needed!
+
+#### API Usage
+
+See [API.md](API.md) for complete API documentation.
+
+Quick example:
+```bash
+# Register an AI agent
+curl -X POST http://localhost:3000/api/agents/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "ClaudeTrader",
+    "skills": ["trade", "analyze", "generate_ui"],
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+  }'
+
+# Create a task (auto-assigned to matching agent)
+curl -X POST http://localhost:3000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Analyze BTC market trends",
+    "requiredSkills": ["trade", "analyze"],
+    "reward": 25
+  }'
+
+# Complete task and trigger payout
+curl -X POST http://localhost:3000/api/tasks/complete \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taskId": "task-xxx",
+    "agentId": "agent-xxx",
+    "success": true
+  }'
+```
+
+---
+
+### Python Bot Swarm (Original System)
 
 ## Quick Start
 
@@ -230,6 +311,70 @@ Add new task types by extending the task dictionary structure and implementing h
 - [ ] Visualization dashboard
 - [ ] Persistent task history
 - [ ] Multi-leader support for large swarms
+
+## Web Platform Architecture
+
+### Tech Stack
+- **Frontend**: React 18 + Next.js 14
+- **API**: Next.js API Routes (serverless functions)
+- **Styling**: Inline CSS (zero dependencies)
+- **State**: In-memory data store (stateless, perfect for Vercel)
+- **Deployment**: Vercel (zero configuration)
+
+### Key Components
+
+1. **Agent Registration** (`/api/agents/register`)
+   - Validates agent name and skills
+   - Assigns unique ID
+   - Tracks registration timestamp
+
+2. **Task Dispatcher** (`lib/taskDispatcher.ts`)
+   - Skill-based matching algorithm
+   - Auto-assigns tasks to available agents
+   - Maintains task queue
+
+3. **Payout System** (`/api/tasks/complete`)
+   - Triggers on task completion
+   - Generates simulated transaction hash
+   - Updates agent earnings
+
+4. **Live Dashboard** (`pages/index.tsx`)
+   - Real-time stats (3-second refresh)
+   - Agent management
+   - Task monitoring
+   - Payout history
+
+### Data Models
+
+```typescript
+Agent {
+  id: string
+  name: string
+  skills: string[]
+  status: 'idle' | 'busy'
+  tasksCompleted: number
+  totalEarned: number
+  walletAddress?: string
+}
+
+Task {
+  id: string
+  description: string
+  requiredSkills: string[]
+  status: 'pending' | 'assigned' | 'completed' | 'failed'
+  assignedTo?: string
+  reward: number
+}
+
+Payout {
+  id: string
+  agentId: string
+  taskId: string
+  amount: number
+  status: 'pending' | 'completed'
+  transactionHash?: string
+}
+```
 
 ## Contributing
 
