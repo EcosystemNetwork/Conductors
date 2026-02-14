@@ -1,5 +1,6 @@
-import React, { useState, useEffect, CSSProperties } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import s from '../styles/Home.module.css';
 
 interface Agent {
   id: string;
@@ -39,7 +40,6 @@ export default function Home() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Form states
   const [agentForm, setAgentForm] = useState({
     name: '',
     skills: '',
@@ -51,7 +51,6 @@ export default function Home() {
     reward: '10'
   });
 
-  // Fetch data
   const fetchData = async () => {
     try {
       const [agentsRes, tasksRes, payoutsRes] = await Promise.all([
@@ -74,11 +73,10 @@ export default function Home() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 3000); // Auto-refresh every 3 seconds
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // Register agent
   const handleRegisterAgent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -101,7 +99,6 @@ export default function Home() {
     }
   };
 
-  // Create task
   const handleCreateTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -124,7 +121,6 @@ export default function Home() {
     }
   };
 
-  // Complete task (for demo purposes)
   const handleCompleteTask = async (taskId: string, agentId: string) => {
     try {
       await fetch('/api/tasks/complete', {
@@ -151,6 +147,25 @@ export default function Home() {
     totalPayouts: payouts.reduce((sum, p) => sum + p.amount, 0)
   };
 
+  const tabs = [
+    { key: 'dashboard', label: 'Dashboard', icon: '◎' },
+    { key: 'agents', label: 'Agents', icon: '⬡' },
+    { key: 'tasks', label: 'Tasks', icon: '⚡' },
+    { key: 'payouts', label: 'Payouts', icon: '◈' },
+  ];
+
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'idle': return s.statusIdle;
+      case 'busy': return s.statusBusy;
+      case 'pending': return s.statusPending;
+      case 'assigned': return s.statusAssigned;
+      case 'completed': return s.statusCompleted;
+      case 'failed': return s.statusFailed;
+      default: return s.statusPending;
+    }
+  };
+
   return (
     <>
       <Head>
@@ -159,500 +174,296 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div style={styles.container}>
-        <header style={styles.header}>
-          <h1 style={styles.title}>🤖 Claw Agent Network</h1>
-          <p style={styles.tagline}>Any AI can become an on-chain worker</p>
+      <div className={s.bgGlow} />
+
+      <div className={s.container}>
+        <header className={s.header}>
+          <div className={s.logo}>
+            <span className={s.logoIcon}>⬡</span>
+            <h1 className={s.title}>Claw Agent Network</h1>
+          </div>
+          <p className={s.tagline}>Any AI can become an on-chain worker</p>
         </header>
 
-        {/* Navigation */}
-        <nav style={styles.nav}>
-          <button 
-            style={{...styles.navButton, ...(activeTab === 'dashboard' ? styles.navButtonActive : {})}}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            Dashboard
-          </button>
-          <button 
-            style={{...styles.navButton, ...(activeTab === 'agents' ? styles.navButtonActive : {})}}
-            onClick={() => setActiveTab('agents')}
-          >
-            Agents
-          </button>
-          <button 
-            style={{...styles.navButton, ...(activeTab === 'tasks' ? styles.navButtonActive : {})}}
-            onClick={() => setActiveTab('tasks')}
-          >
-            Tasks
-          </button>
-          <button 
-            style={{...styles.navButton, ...(activeTab === 'payouts' ? styles.navButtonActive : {})}}
-            onClick={() => setActiveTab('payouts')}
-          >
-            Payouts
-          </button>
+        <nav className={s.nav}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              className={`${s.navButton} ${activeTab === tab.key ? s.navButtonActive : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </nav>
 
-        {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div style={styles.content}>
-            <div style={styles.statsGrid}>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>{stats.totalAgents}</div>
-                <div style={styles.statLabel}>Total Agents</div>
-                <div style={styles.statSubtext}>{stats.idleAgents} idle</div>
+          <div className={s.content}>
+            <div className={s.statsGrid}>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>⬡</div>
+                <div className={s.statValue}>{stats.totalAgents}</div>
+                <div className={s.statLabel}>Total Agents</div>
+                <div className={s.statSubtext}>
+                  <span className={s.statusDot} style={{ color: 'var(--success)' }} />
+                  {stats.idleAgents} idle
+                </div>
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>{stats.totalTasks}</div>
-                <div style={styles.statLabel}>Total Tasks</div>
-                <div style={styles.statSubtext}>{stats.pendingTasks} pending</div>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>⚡</div>
+                <div className={s.statValue}>{stats.totalTasks}</div>
+                <div className={s.statLabel}>Total Tasks</div>
+                <div className={s.statSubtext}>
+                  <span className={s.statusDot} style={{ color: 'var(--info)' }} />
+                  {stats.pendingTasks} pending
+                </div>
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>{stats.completedTasks}</div>
-                <div style={styles.statLabel}>Completed</div>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>✓</div>
+                <div className={s.statValue}>{stats.completedTasks}</div>
+                <div className={s.statLabel}>Completed</div>
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>{stats.totalPayouts.toFixed(2)}</div>
-                <div style={styles.statLabel}>Total Paid</div>
+              <div className={s.statCard}>
+                <div className={s.statIcon}>◈</div>
+                <div className={s.statValue}>{stats.totalPayouts.toFixed(2)}</div>
+                <div className={s.statLabel}>Total Paid</div>
               </div>
             </div>
 
-            <div style={styles.twoColumn}>
-              <div style={styles.formSection}>
-                <h2 style={styles.sectionTitle}>Register New Agent</h2>
-                <form onSubmit={handleRegisterAgent} style={styles.form}>
+            <div className={s.twoColumn}>
+              <div className={s.card}>
+                <h2 className={s.sectionTitle}>Register New Agent</h2>
+                <form onSubmit={handleRegisterAgent} className={s.form}>
                   <input
                     type="text"
                     placeholder="Agent Name (e.g., ClaudeTrader)"
                     value={agentForm.name}
-                    onChange={(e) => setAgentForm({...agentForm, name: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
+                    className={s.input}
                     required
                   />
                   <input
                     type="text"
                     placeholder="Skills (comma-separated: trade, analyze, generate_ui)"
                     value={agentForm.skills}
-                    onChange={(e) => setAgentForm({...agentForm, skills: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
+                    className={s.input}
                     required
                   />
                   <input
                     type="text"
                     placeholder="Wallet Address (optional)"
                     value={agentForm.walletAddress}
-                    onChange={(e) => setAgentForm({...agentForm, walletAddress: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
+                    className={s.input}
                   />
-                  <button type="submit" style={styles.button}>Register Agent</button>
+                  <button type="submit" className={s.button}>Register Agent</button>
                 </form>
               </div>
 
-              <div style={styles.formSection}>
-                <h2 style={styles.sectionTitle}>Create New Task</h2>
-                <form onSubmit={handleCreateTask} style={styles.form}>
+              <div className={s.card}>
+                <h2 className={s.sectionTitle}>Create New Task</h2>
+                <form onSubmit={handleCreateTask} className={s.form}>
                   <input
                     type="text"
                     placeholder="Task Description"
                     value={taskForm.description}
-                    onChange={(e) => setTaskForm({...taskForm, description: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                    className={s.input}
                     required
                   />
                   <input
                     type="text"
                     placeholder="Required Skills (comma-separated)"
                     value={taskForm.requiredSkills}
-                    onChange={(e) => setTaskForm({...taskForm, requiredSkills: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setTaskForm({ ...taskForm, requiredSkills: e.target.value })}
+                    className={s.input}
                     required
                   />
                   <input
                     type="number"
                     placeholder="Reward Amount"
                     value={taskForm.reward}
-                    onChange={(e) => setTaskForm({...taskForm, reward: e.target.value})}
-                    style={styles.input}
+                    onChange={(e) => setTaskForm({ ...taskForm, reward: e.target.value })}
+                    className={s.input}
                     required
                   />
-                  <button type="submit" style={styles.button}>Create Task</button>
+                  <button type="submit" className={s.button}>Create Task</button>
                 </form>
               </div>
             </div>
           </div>
         )}
 
-        {/* Agents Tab */}
         {activeTab === 'agents' && (
-          <div style={styles.content}>
-            <h2 style={styles.sectionTitle}>Registered Agents ({agents.length})</h2>
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Name</th>
-                    <th style={styles.th}>Skills</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Tasks Completed</th>
-                    <th style={styles.th}>Total Earned</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agents.map((agent) => (
-                    <tr key={agent.id} style={styles.tr}>
-                      <td style={styles.td}>{agent.name}</td>
-                      <td style={styles.td}>
-                        {agent.skills.map((skill, idx) => (
-                          <span key={idx} style={styles.badge}>{skill}</span>
-                        ))}
-                      </td>
-                      <td style={styles.td}>
-                        <span style={{
-                          ...styles.statusBadge,
-                          ...(agent.status === 'idle' ? styles.statusIdle : styles.statusBusy)
-                        }}>
-                          {agent.status}
-                        </span>
-                      </td>
-                      <td style={styles.td}>{agent.tasksCompleted}</td>
-                      <td style={styles.td}>{agent.totalEarned.toFixed(2)}</td>
+          <div className={s.content}>
+            <h2 className={s.sectionTitle}>
+              Registered Agents <span>({agents.length})</span>
+            </h2>
+            <div className={s.tableContainer}>
+              <div className={s.tableScroll}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th className={s.th}>Name</th>
+                      <th className={s.th}>Skills</th>
+                      <th className={s.th}>Status</th>
+                      <th className={s.th}>Tasks Completed</th>
+                      <th className={s.th}>Total Earned</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {agents.length === 0 && (
-                <div style={styles.emptyState}>No agents registered yet</div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Tasks Tab */}
-        {activeTab === 'tasks' && (
-          <div style={styles.content}>
-            <h2 style={styles.sectionTitle}>All Tasks ({tasks.length})</h2>
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Description</th>
-                    <th style={styles.th}>Required Skills</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Assigned To</th>
-                    <th style={styles.th}>Reward</th>
-                    <th style={styles.th}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map((task) => {
-                    const assignedAgent = agents.find(a => a.id === task.assignedTo);
-                    return (
-                      <tr key={task.id} style={styles.tr}>
-                        <td style={styles.td}>{task.description}</td>
-                        <td style={styles.td}>
-                          {task.requiredSkills.map((skill, idx) => (
-                            <span key={idx} style={styles.badge}>{skill}</span>
+                  </thead>
+                  <tbody>
+                    {agents.map((agent) => (
+                      <tr key={agent.id} className={s.tr}>
+                        <td className={s.td}>{agent.name}</td>
+                        <td className={s.td}>
+                          {agent.skills.map((skill, idx) => (
+                            <span key={idx} className={s.badge}>{skill}</span>
                           ))}
                         </td>
-                        <td style={styles.td}>
-                          <span style={{
-                            ...styles.statusBadge,
-                            ...(task.status === 'completed' ? styles.statusCompleted : 
-                                task.status === 'assigned' ? styles.statusAssigned : 
-                                styles.statusPending)
-                          }}>
-                            {task.status}
+                        <td className={s.td}>
+                          <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
+                            <span className={s.statusDot} />
+                            {agent.status}
                           </span>
                         </td>
-                        <td style={styles.td}>{assignedAgent?.name || '-'}</td>
-                        <td style={styles.td}>{task.reward.toFixed(2)}</td>
-                        <td style={styles.td}>
-                          {task.status === 'assigned' && task.assignedTo && (
-                            <button 
-                              style={styles.smallButton}
-                              onClick={() => handleCompleteTask(task.id, task.assignedTo!)}
-                            >
-                              Complete
-                            </button>
-                          )}
-                        </td>
+                        <td className={s.td}>{agent.tasksCompleted}</td>
+                        <td className={s.td}>{agent.totalEarned.toFixed(2)}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {agents.length === 0 && (
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>⬡</div>
+                  No agents registered yet
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <div className={s.content}>
+            <h2 className={s.sectionTitle}>
+              All Tasks <span>({tasks.length})</span>
+            </h2>
+            <div className={s.tableContainer}>
+              <div className={s.tableScroll}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th className={s.th}>Description</th>
+                      <th className={s.th}>Required Skills</th>
+                      <th className={s.th}>Status</th>
+                      <th className={s.th}>Assigned To</th>
+                      <th className={s.th}>Reward</th>
+                      <th className={s.th}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasks.map((task) => {
+                      const assignedAgent = agents.find(a => a.id === task.assignedTo);
+                      return (
+                        <tr key={task.id} className={s.tr}>
+                          <td className={s.td}>{task.description}</td>
+                          <td className={s.td}>
+                            {task.requiredSkills.map((skill, idx) => (
+                              <span key={idx} className={s.badge}>{skill}</span>
+                            ))}
+                          </td>
+                          <td className={s.td}>
+                            <span className={`${s.statusBadge} ${getStatusClass(task.status)}`}>
+                              <span className={s.statusDot} />
+                              {task.status}
+                            </span>
+                          </td>
+                          <td className={s.td}>{assignedAgent?.name || '—'}</td>
+                          <td className={s.td}>{task.reward.toFixed(2)}</td>
+                          <td className={s.td}>
+                            {task.status === 'assigned' && task.assignedTo && (
+                              <button
+                                className={s.smallButton}
+                                onClick={() => handleCompleteTask(task.id, task.assignedTo!)}
+                              >
+                                Complete
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
               {tasks.length === 0 && (
-                <div style={styles.emptyState}>No tasks created yet</div>
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>⚡</div>
+                  No tasks created yet
+                </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Payouts Tab */}
         {activeTab === 'payouts' && (
-          <div style={styles.content}>
-            <h2 style={styles.sectionTitle}>Payout History ({payouts.length})</h2>
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Agent</th>
-                    <th style={styles.th}>Task</th>
-                    <th style={styles.th}>Amount</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Transaction Hash</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payouts.map((payout) => {
-                    const agent = agents.find(a => a.id === payout.agentId);
-                    const task = tasks.find(t => t.id === payout.taskId);
-                    return (
-                      <tr key={payout.id} style={styles.tr}>
-                        <td style={styles.td}>{agent?.name || 'Unknown'}</td>
-                        <td style={styles.td}>{task?.description || 'Unknown'}</td>
-                        <td style={styles.td}>{payout.amount.toFixed(2)}</td>
-                        <td style={styles.td}>
-                          <span style={{
-                            ...styles.statusBadge,
-                            ...(payout.status === 'completed' ? styles.statusCompleted : styles.statusPending)
-                          }}>
-                            {payout.status}
-                          </span>
-                        </td>
-                        <td style={styles.td}>
-                          <code style={styles.code}>{payout.transactionHash?.substring(0, 16)}...</code>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <div className={s.content}>
+            <h2 className={s.sectionTitle}>
+              Payout History <span>({payouts.length})</span>
+            </h2>
+            <div className={s.tableContainer}>
+              <div className={s.tableScroll}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th className={s.th}>Agent</th>
+                      <th className={s.th}>Task</th>
+                      <th className={s.th}>Amount</th>
+                      <th className={s.th}>Status</th>
+                      <th className={s.th}>Transaction Hash</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payouts.map((payout) => {
+                      const agent = agents.find(a => a.id === payout.agentId);
+                      const task = tasks.find(t => t.id === payout.taskId);
+                      return (
+                        <tr key={payout.id} className={s.tr}>
+                          <td className={s.td}>{agent?.name || 'Unknown'}</td>
+                          <td className={s.td}>{task?.description || 'Unknown'}</td>
+                          <td className={s.td}>{payout.amount.toFixed(2)}</td>
+                          <td className={s.td}>
+                            <span className={`${s.statusBadge} ${getStatusClass(payout.status)}`}>
+                              <span className={s.statusDot} />
+                              {payout.status}
+                            </span>
+                          </td>
+                          <td className={s.td}>
+                            <code className={s.code}>
+                              {payout.transactionHash?.substring(0, 16)}...
+                            </code>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
               {payouts.length === 0 && (
-                <div style={styles.emptyState}>No payouts yet</div>
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>◈</div>
+                  No payouts yet
+                </div>
               )}
             </div>
           </div>
         )}
 
-        <footer style={styles.footer}>
-          <p>🚀 Claw Agent Network - Built for Vercel</p>
+        <footer className={s.footer}>
+          <p>Claw Agent Network — Built for Vercel</p>
         </footer>
       </div>
     </>
   );
 }
-
-const styles: { [key: string]: CSSProperties } = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    padding: '20px',
-  },
-  header: {
-    textAlign: 'center',
-    color: 'white',
-    marginBottom: '30px',
-  },
-  title: {
-    fontSize: '3rem',
-    margin: '0 0 10px 0',
-    fontWeight: 'bold',
-  },
-  tagline: {
-    fontSize: '1.2rem',
-    margin: 0,
-    opacity: 0.9,
-  },
-  nav: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '10px',
-    marginBottom: '30px',
-    flexWrap: 'wrap',
-  },
-  navButton: {
-    padding: '12px 24px',
-    background: 'rgba(255, 255, 255, 0.2)',
-    border: 'none',
-    borderRadius: '8px',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '500',
-    transition: 'all 0.3s',
-  },
-  navButtonActive: {
-    background: 'white',
-    color: '#667eea',
-  },
-  content: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px',
-  },
-  statCard: {
-    background: 'white',
-    padding: '24px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center',
-  },
-  statValue: {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    color: '#667eea',
-    marginBottom: '8px',
-  },
-  statLabel: {
-    fontSize: '0.9rem',
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-  },
-  statSubtext: {
-    fontSize: '0.85rem',
-    color: '#999',
-    marginTop: '4px',
-  },
-  twoColumn: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px',
-  },
-  formSection: {
-    background: 'white',
-    padding: '24px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    color: '#333',
-    marginBottom: '20px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  input: {
-    padding: '12px',
-    border: '2px solid #e0e0e0',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s',
-  },
-  button: {
-    padding: '12px 24px',
-    background: '#667eea',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background 0.3s',
-  },
-  smallButton: {
-    padding: '6px 12px',
-    background: '#667eea',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '0.85rem',
-    cursor: 'pointer',
-    transition: 'background 0.3s',
-  },
-  tableContainer: {
-    background: 'white',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    overflowX: 'auto',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-  },
-  th: {
-    textAlign: 'left',
-    padding: '12px',
-    borderBottom: '2px solid #e0e0e0',
-    color: '#666',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  tr: {
-    borderBottom: '1px solid #f0f0f0',
-  },
-  td: {
-    padding: '12px',
-    color: '#333',
-  },
-  badge: {
-    display: 'inline-block',
-    padding: '4px 8px',
-    background: '#e0e7ff',
-    color: '#667eea',
-    borderRadius: '4px',
-    fontSize: '0.8rem',
-    marginRight: '4px',
-    marginBottom: '4px',
-  },
-  statusBadge: {
-    display: 'inline-block',
-    padding: '4px 12px',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-  },
-  statusIdle: {
-    background: '#dcfce7',
-    color: '#166534',
-  },
-  statusBusy: {
-    background: '#fef3c7',
-    color: '#92400e',
-  },
-  statusPending: {
-    background: '#e0e7ff',
-    color: '#3730a3',
-  },
-  statusAssigned: {
-    background: '#fef3c7',
-    color: '#92400e',
-  },
-  statusCompleted: {
-    background: '#dcfce7',
-    color: '#166534',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#999',
-    fontSize: '1.1rem',
-  },
-  code: {
-    background: '#f5f5f5',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '0.85rem',
-    fontFamily: 'monospace',
-  },
-  footer: {
-    textAlign: 'center',
-    color: 'white',
-    marginTop: '40px',
-    opacity: 0.8,
-  },
-};
