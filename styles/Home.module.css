@@ -66,12 +66,12 @@
 .title {
   font-size: 1.5rem;
   font-weight: 700;
+  /* Fallback for browsers without background-clip support */
+  color: var(--text-primary);
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  /* Fallback for browsers without background-clip support */
-  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -608,19 +608,12 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  /* Use 16px minimum on mobile to prevent iOS auto-zoom on focus */
+  font-size: max(16px, 0.9rem);
   transition: all var(--transition);
   outline: none;
   /* iOS Safari specific fixes */
   -webkit-appearance: none;
-  /* Prevent zoom on focus on iOS */
-  font-size: 16px;
-}
-
-@media (min-width: 768px) {
-  .searchInput {
-    font-size: 0.9rem;
-  }
 }
 
 .searchInput::placeholder {

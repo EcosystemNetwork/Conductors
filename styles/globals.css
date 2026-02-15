@@ -41,8 +41,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* Support for notched devices */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 body {
@@ -58,6 +56,8 @@ body {
   overflow-x: hidden;
   /* Improve text rendering on mobile */
   text-rendering: optimizeLegibility;
+  /* Support for notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 a {
