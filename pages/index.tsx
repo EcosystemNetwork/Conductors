@@ -215,8 +215,6 @@ export default function Home() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [nodeIdCounter, setNodeIdCounter] = useState(4);
-  const [showAddAgent, setShowAddAgent] = useState(false);
-  const [showAddTask, setShowAddTask] = useState(false);
   const [plannerSubmitting, setPlannerSubmitting] = useState(false);
   const [plannerResult, setPlannerResult] = useState<{ success: boolean; message: string } | null>(null);
   const [plannerAgentForm, setPlannerAgentForm] = useState({
@@ -388,7 +386,6 @@ export default function Home() {
     setNodes((nds) => [...nds, newNode]);
     setNodeIdCounter(nodeIdCounter + 1);
     setPlannerAgentForm({ name: '', skills: '', cost: '10' });
-    setShowAddAgent(false);
   }, [nodeIdCounter, plannerAgentForm, setNodes]);
 
   const addPlannerTaskNode = useCallback(() => {
@@ -411,7 +408,6 @@ export default function Home() {
     setNodes((nds) => [...nds, newNode]);
     setNodeIdCounter(nodeIdCounter + 1);
     setPlannerTaskForm({ name: '', description: '', skills: '', cost: '10' });
-    setShowAddTask(false);
   }, [nodeIdCounter, plannerTaskForm, setNodes]);
 
   const totalPlannerCost = useMemo(() => {
@@ -1199,324 +1195,305 @@ export default function Home() {
             )}
 
             <div style={{
+              display: 'flex',
+              gap: '16px',
               height: '600px',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              position: 'relative',
             }}>
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                isValidConnection={isValidConnection}
-                nodeTypes={nodeTypes}
-                fitView
-              >
-                <Background />
-                <Controls />
-                <MiniMap 
-                  nodeColor={(node) => {
-                    if (node.type === 'agentNode') return '#6366f1';
-                    if (node.type === 'taskNode') return '#22c55e';
-                    return '#94a3b8';
-                  }}
-                  style={{
-                    background: 'var(--bg-glass)',
-                    border: '1px solid var(--border-color)',
-                  }}
-                />
-                <Panel position="top-left">
-                  <div style={{
-                    background: 'var(--bg-glass)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
+              {/* Sidebar */}
+              <div style={{
+                width: '300px',
+                background: 'var(--bg-glass)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+                overflowY: 'auto',
+              }}>
+                <div>
+                  <h3 style={{ 
+                    margin: '0 0 12px 0', 
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                  }}>
+                    Add to Swarm
+                  </h3>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: '0.875rem', 
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.5,
+                  }}>
+                    Add agents and tasks to build your workflow
+                  </p>
+                </div>
+
+                {/* Add Agent Section */}
+                <div style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px',
+                }}>
+                  <h4 style={{ 
+                    margin: '0 0 12px 0', 
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
                     display: 'flex',
+                    alignItems: 'center',
                     gap: '8px',
                   }}>
-                    <button 
-                      onClick={() => setShowAddAgent(!showAddAgent)}
-                      style={{
-                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        fontWeight: 500,
-                      }}
-                    >
-                      + Add Agent
-                    </button>
-                    <button 
-                      onClick={() => setShowAddTask(!showAddTask)}
-                      style={{
-                        background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        fontWeight: 500,
-                      }}
-                    >
-                      + Add Task
-                    </button>
-                  </div>
-                  
-                  {showAddAgent && (
-                    <div style={{
-                      marginTop: '12px',
-                      background: 'var(--bg-glass)',
+                    <span style={{ fontSize: '1.25rem' }}>🤖</span> Add Agent
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="Agent Name"
+                    value={plannerAgentForm.name}
+                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
                       borderRadius: 'var(--radius-md)',
-                      padding: '16px',
-                      minWidth: '250px',
-                    }}>
-                      <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1rem' }}>Add Agent Node</h3>
-                      <input
-                        type="text"
-                        placeholder="Agent Name"
-                        value={plannerAgentForm.name}
-                        onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, name: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '8px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Skills (comma-separated)"
-                        value={plannerAgentForm.skills}
-                        onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, skills: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '8px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Cost per task"
-                        value={plannerAgentForm.cost}
-                        onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, cost: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '12px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          onClick={addPlannerAgentNode}
-                          style={{
-                            flex: 1,
-                            background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            fontWeight: 500,
-                          }}
-                        >
-                          Add
-                        </button>
-                        <button 
-                          onClick={() => setShowAddAgent(false)}
-                          style={{
-                            flex: 1,
-                            background: 'var(--bg-secondary)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border-color)',
-                            padding: '8px',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {showAddTask && (
-                    <div style={{
-                      marginTop: '12px',
-                      background: 'var(--bg-glass)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '16px',
-                      minWidth: '250px',
-                    }}>
-                      <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1rem' }}>Add Task Node</h3>
-                      <input
-                        type="text"
-                        placeholder="Task Name"
-                        value={plannerTaskForm.name}
-                        onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, name: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '8px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Description"
-                        value={plannerTaskForm.description}
-                        onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, description: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '8px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Required Skills (comma-separated)"
-                        value={plannerTaskForm.skills}
-                        onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, skills: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '8px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Estimated Cost"
-                        value={plannerTaskForm.cost}
-                        onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, cost: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          marginBottom: '12px',
-                          background: 'var(--bg-secondary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-md)',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          onClick={addPlannerTaskNode}
-                          style={{
-                            flex: 1,
-                            background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            fontWeight: 500,
-                          }}
-                        >
-                          Add
-                        </button>
-                        <button 
-                          onClick={() => setShowAddTask(false)}
-                          style={{
-                            flex: 1,
-                            background: 'var(--bg-secondary)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border-color)',
-                            padding: '8px',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </Panel>
-
-                <Panel position="bottom-right">
-                  <div style={{
-                    background: 'var(--bg-glass)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      gap: '12px',
-                      marginBottom: '8px',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{ 
-                          width: '16px',
-                          height: '16px',
-                          background: '#6366f1',
-                          borderRadius: '3px',
-                        }}></div>
-                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Agent</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{ 
-                          width: '16px',
-                          height: '16px',
-                          background: '#22c55e',
-                          borderRadius: '3px',
-                        }}></div>
-                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Task</span>
-                      </div>
-                    </div>
-                    <div style={{ 
+                      color: 'var(--text-primary)',
                       fontSize: '0.875rem',
-                      color: 'var(--text-secondary)',
-                      borderTop: '1px solid var(--border-color)',
-                      paddingTop: '8px',
-                    }}>
-                      💡 Drag to connect agents to tasks
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Skills (comma-separated)"
+                    value={plannerAgentForm.skills}
+                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, skills: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Cost per task"
+                    value={plannerAgentForm.cost}
+                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, cost: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '12px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button 
+                    onClick={addPlannerAgentNode}
+                    className={s.sidebarButton}
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    }}
+                  >
+                    Add Agent Node
+                  </button>
+                </div>
+
+                {/* Add Task Section */}
+                <div style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px',
+                }}>
+                  <h4 style={{ 
+                    margin: '0 0 12px 0', 
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}>
+                    <span style={{ fontSize: '1.25rem' }}>⚡</span> Add Task
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="Task Name"
+                    value={plannerTaskForm.name}
+                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={plannerTaskForm.description}
+                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, description: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Required Skills (comma-separated)"
+                    value={plannerTaskForm.skills}
+                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, skills: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Estimated Cost"
+                    value={plannerTaskForm.cost}
+                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, cost: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      marginBottom: '12px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button 
+                    onClick={addPlannerTaskNode}
+                    className={s.sidebarButton}
+                    style={{
+                      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    }}
+                  >
+                    Add Task Node
+                  </button>
+                </div>
+
+                {/* Legend */}
+                <div style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px',
+                  marginTop: 'auto',
+                }}>
+                  <h4 style={{ 
+                    margin: '0 0 12px 0', 
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                  }}>
+                    Legend
+                  </h4>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ 
+                        width: '20px',
+                        height: '20px',
+                        background: '#6366f1',
+                        borderRadius: '4px',
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Agent Node</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ 
+                        width: '20px',
+                        height: '20px',
+                        background: '#22c55e',
+                        borderRadius: '4px',
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Task Node</span>
                     </div>
                   </div>
-                </Panel>
-              </ReactFlow>
+                  <div style={{ 
+                    fontSize: '0.875rem',
+                    color: 'var(--text-secondary)',
+                    borderTop: '1px solid var(--border-color)',
+                    paddingTop: '12px',
+                    marginTop: '12px',
+                    lineHeight: 1.5,
+                  }}>
+                    💡 Drag to connect agents to tasks
+                  </div>
+                </div>
+              </div>
+
+              {/* React Flow Canvas */}
+              <div style={{
+                flex: 1,
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                overflow: 'hidden',
+                position: 'relative',
+              }}>
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  isValidConnection={isValidConnection}
+                  nodeTypes={nodeTypes}
+                  fitView
+                >
+                  <Background />
+                  <Controls />
+                  <MiniMap 
+                    nodeColor={(node) => {
+                      if (node.type === 'agentNode') return '#6366f1';
+                      if (node.type === 'taskNode') return '#22c55e';
+                      return '#94a3b8';
+                    }}
+                    style={{
+                      background: 'var(--bg-glass)',
+                      border: '1px solid var(--border-color)',
+                    }}
+                  />
+                </ReactFlow>
+              </div>
             </div>
           </div>
         )}
