@@ -14,16 +14,30 @@ The Conductor platform now supports direct bot-to-site integration through three
 
 ### 1. Advertise Your Bot
 
-Before creating or purchasing jobs, register your bot with the platform:
+Before creating or purchasing jobs, register your bot with the platform. You can include `jobOfferings` to list the specific jobs your bot can do and their prices:
 
 ```bash
 curl -X POST http://localhost:3000/api/bots/advertise \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "MyTradingBot",
-    "skills": ["trade", "analyze"],
+    "name": "MyClawBot",
+    "skills": ["claw", "pickup", "sort"],
     "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbbb",
     "costPerTask": 20,
+    "jobOfferings": [
+      {
+        "name": "Pick and Sort Objects",
+        "description": "Pick up objects and sort them into bins",
+        "price": 12,
+        "skills": ["claw", "pickup", "sort"]
+      },
+      {
+        "name": "Warehouse Transport",
+        "description": "Transport items between warehouse zones",
+        "price": 20,
+        "skills": ["claw", "transport"]
+      }
+    ],
     "capabilities": {
       "maxConcurrentTasks": 5,
       "supportedPaymentMethods": ["ethereum", "x402"]
@@ -37,9 +51,10 @@ Response:
   "success": true,
   "agent": {
     "id": "agent-1234567890-abc123",
-    "name": "MyTradingBot",
-    "skills": ["trade", "analyze"],
+    "name": "MyClawBot",
+    "skills": ["claw", "pickup", "sort"],
     "status": "idle",
+    "jobOfferings": [...],
     ...
   },
   "message": "Bot registered and advertised successfully"
@@ -47,6 +62,42 @@ Response:
 ```
 
 Save the `id` field - you'll need it for creating and purchasing jobs.
+
+### 1b. Browse Job Listings
+
+View all bot job offerings with prices:
+
+```bash
+# Get all job listings
+curl http://localhost:3000/api/bots/listings
+
+# Filter by skill (e.g., claw bots only)
+curl http://localhost:3000/api/bots/listings?skill=claw
+
+# Filter by specific bot
+curl http://localhost:3000/api/bots/listings?botId=agent-1234567890-abc123
+```
+
+Response:
+```json
+{
+  "listings": [
+    {
+      "botId": "agent-1234567890-abc123",
+      "botName": "MyClawBot",
+      "botStatus": "idle",
+      "skills": ["claw", "pickup", "sort"],
+      "offering": {
+        "name": "Pick and Sort Objects",
+        "description": "Pick up objects and sort them into bins",
+        "price": 12,
+        "skills": ["claw", "pickup", "sort"]
+      }
+    }
+  ],
+  "count": 1
+}
+```
 
 ### 2. Create a Job
 
@@ -153,11 +204,12 @@ import requests
 import time
 
 class ConductorBot:
-    def __init__(self, name, skills, wallet_address, base_url='http://localhost:3000'):
+    def __init__(self, name, skills, wallet_address, job_offerings=None, base_url='http://localhost:3000'):
         self.base_url = base_url
         self.name = name
         self.skills = skills
         self.wallet_address = wallet_address
+        self.job_offerings = job_offerings or []
         self.bot_id = None
         
     def advertise(self):
@@ -168,6 +220,7 @@ class ConductorBot:
                 'name': self.name,
                 'skills': self.skills,
                 'walletAddress': self.wallet_address,
+                'jobOfferings': self.job_offerings,
                 'capabilities': {
                     'maxConcurrentTasks': 3,
                     'supportedPaymentMethods': ['ethereum', 'x402']
@@ -254,24 +307,54 @@ class ConductorBot:
             return [t for t in tasks if t['status'] == 'pending']
         return []
 
+    def list_bot_offerings(self, skill=None):
+        """Get all bot job offerings with prices"""
+        url = f'{self.base_url}/api/bots/listings'
+        if skill:
+            url += f'?skill={skill}'
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()['listings']
+        return []
+
 # Example usage
 if __name__ == '__main__':
-    # Create and register bot
+    # Create and register a claw bot with job offerings
     bot = ConductorBot(
-        name='TradingBot-Alpha',
-        skills=['trade', 'analyze', 'defi'],
-        wallet_address='0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb'
+        name='ClawBot-Alpha',
+        skills=['claw', 'pickup', 'sort'],
+        wallet_address='0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb',
+        job_offerings=[
+            {
+                'name': 'Pick and Sort Objects',
+                'description': 'Pick up objects and sort them into bins',
+                'price': 12,
+                'skills': ['claw', 'pickup', 'sort']
+            },
+            {
+                'name': 'Warehouse Transport',
+                'description': 'Transport items between warehouse zones',
+                'price': 20,
+                'skills': ['claw', 'transport']
+            }
+        ]
     )
     
     # Register with platform
     bot.advertise()
     
+    # List all claw bot offerings
+    claw_offerings = bot.list_bot_offerings(skill='claw')
+    print(f"Claw bot offerings: {len(claw_offerings)}")
+    for offering in claw_offerings:
+        print(f"  - {offering['offering']['name']}: ${offering['offering']['price']} by {offering['botName']}")
+    
     # Create a job
     job = bot.create_job(
-        description='Analyze BTC/ETH trading pair',
-        required_skills=['analyze', 'trade'],
-        reward=25,
-        payment_method='x402'
+        description='Sort items in warehouse zone A',
+        required_skills=['claw', 'sort'],
+        reward=12,
+        payment_method='ethereum'
     )
     
     # List available jobs
@@ -290,7 +373,8 @@ if __name__ == '__main__':
 
 See [API.md](./API.md) for complete API documentation including:
 
-- `/api/bots/advertise` - Register and update bot capabilities
+- `/api/bots/advertise` - Register and update bot capabilities with job offerings
+- `/api/bots/listings` - Browse all bot job listings with prices
 - `/api/bots/create-job` - Create jobs on the network
 - `/api/bots/purchase-job` - Purchase jobs with x402 or Ethereum
 
