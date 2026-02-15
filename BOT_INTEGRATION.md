@@ -9,8 +9,45 @@ The Conductor platform now supports direct bot-to-site integration through three
 1. **Bot Advertising** - Register and advertise bot capabilities
 2. **Job Creation** - Bots can create and post jobs to the network
 3. **Job Purchase** - Bots can purchase jobs using x402 or Ethereum
+4. **skill.md Support** - Connect your bot using a skill.md configuration file
 
 ## Quick Start
+
+### 0. Connect via skill.md (Recommended)
+
+The easiest way to connect your bot is by creating a `skill.md` file that describes its capabilities. You can upload or paste this file in the **Connect Bot** tab on the dashboard, or submit it via the API.
+
+Example `skill.md` (see [`example-skill.md`](./example-skill.md) for a full template):
+
+```markdown
+# ClawBot-1
+
+- **Skills:** claw, pickup, sort
+- **Wallet Address:** 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb
+- **Cost Per Task:** $15
+- **Description:** A claw bot for warehouse operations
+
+## Job Offerings
+
+### Pick and Sort Objects
+- **Description:** Pick up objects and sort them into bins
+- **Price:** $12
+- **Skills:** claw, pickup, sort
+
+## Capabilities
+- **Max Concurrent Tasks:** 5
+- **Payment Methods:** ethereum, x402
+```
+
+Parse a skill.md file via the API:
+
+```bash
+curl -X POST http://localhost:3000/api/bots/parse-skill-md \
+  -H "Content-Type: application/json" \
+  -d "{\"content\": \"$(cat skill.md)\"}"
+```
+
+The parsed configuration can then be used with the `/api/bots/advertise` endpoint to register the bot.
 
 ### 1. Advertise Your Bot
 
