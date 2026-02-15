@@ -22,7 +22,7 @@ import { TaskDispatcher } from '../../../lib/taskDispatcher';
  *   }
  * }
  */
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { 
       botId, 
@@ -42,7 +42,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    const bot = dataStore.getAgent(botId);
+    const bot = await dataStore.getAgent(botId);
     if (!bot) {
       return res.status(404).json({ 
         error: 'Bot not found. Please register the bot first at /api/agents/register' 
@@ -97,17 +97,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       x402Payment: paymentMethod === 'x402' ? x402Payment : undefined
     };
 
-    dataStore.addTask(task);
+    await dataStore.addTask(task);
 
     // Try to auto-assign to an available agent
-    const assignedAgent = TaskDispatcher.matchTaskToAgent(task);
+    const assignedAgent = await TaskDispatcher.matchTaskToAgent(task);
     if (assignedAgent) {
-      TaskDispatcher.assignTask(task.id, assignedAgent.id);
+      await TaskDispatcher.assignTask(task.id, assignedAgent.id);
     }
 
     return res.status(201).json({ 
       success: true,
-      task: dataStore.getTask(id),
+      task: await dataStore.getTask(id),
       assigned: !!assignedAgent,
       assignedTo: assignedAgent?.name,
       message: 'Job created and advertised successfully',
@@ -117,7 +117,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Get all jobs created by bots
     const { botId } = req.query;
     
-    const allTasks = dataStore.getAllTasks();
+    const allTasks = await dataStore.getAllTasks();
     const botTasks = botId 
       ? allTasks.filter((task: any) => task.createdBy === botId)
       : allTasks;

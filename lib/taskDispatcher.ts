@@ -5,8 +5,8 @@ export class TaskDispatcher {
    * Find the best available agent for a given task based on skill matching.
    * Returns the agent with the most matching skills who is currently idle.
    */
-  static matchTaskToAgent(task: { requiredSkills: string[] }) {
-    const agents = dataStore.getAllAgents();
+  static async matchTaskToAgent(task: { requiredSkills: string[] }) {
+    const agents = await dataStore.getAllAgents();
 
     const idleAgents = agents.filter(agent => agent.status === 'idle');
 
@@ -27,18 +27,18 @@ export class TaskDispatcher {
   /**
    * Assign a task to an agent, updating both records.
    */
-  static assignTask(taskId: string, agentId: string): boolean {
-    const task = dataStore.getTask(taskId);
-    const agent = dataStore.getAgent(agentId);
+  static async assignTask(taskId: string, agentId: string): Promise<boolean> {
+    const task = await dataStore.getTask(taskId);
+    const agent = await dataStore.getAgent(agentId);
 
     if (!task || !agent) return false;
 
-    dataStore.updateTask(taskId, {
+    await dataStore.updateTask(taskId, {
       status: 'assigned',
       assignedTo: agentId
     });
 
-    dataStore.updateAgent(agentId, {
+    await dataStore.updateAgent(agentId, {
       status: 'busy'
     });
 
@@ -50,11 +50,11 @@ export class TaskDispatcher {
    * Automatically assigns the task if found.
    * Tasks are prioritized by priority level (1 highest, 5 lowest).
    */
-  static getNextTaskForAgent(agentId: string) {
-    const agent = dataStore.getAgent(agentId);
+  static async getNextTaskForAgent(agentId: string) {
+    const agent = await dataStore.getAgent(agentId);
     if (!agent || agent.status === 'busy') return null;
 
-    const tasks = dataStore.getAllTasks();
+    const tasks = await dataStore.getAllTasks();
     const pendingTasks = tasks.filter(t => t.status === 'pending');
 
     // Find tasks that match the agent's skills
@@ -75,7 +75,7 @@ export class TaskDispatcher {
     });
 
     const matchingTask = matchingTasks[0];
-    this.assignTask(matchingTask.id, agentId);
+    await this.assignTask(matchingTask.id, agentId);
     return dataStore.getTask(matchingTask.id);
   }
 
@@ -83,15 +83,15 @@ export class TaskDispatcher {
    * Retry a failed task by resetting it to pending status.
    * Returns true if retry is allowed, false if max retries exceeded.
    */
-  static retryTask(taskId: string): boolean {
+  static async retryTask(taskId: string): Promise<boolean> {
     return dataStore.incrementTaskRetry(taskId);
   }
 
   /**
    * Get pending tasks sorted by priority.
    */
-  static getPendingTasksByPriority() {
-    const tasks = dataStore.getAllTasks();
+  static async getPendingTasksByPriority() {
+    const tasks = await dataStore.getAllTasks();
     return tasks
       .filter(t => t.status === 'pending')
       .sort((a, b) => {

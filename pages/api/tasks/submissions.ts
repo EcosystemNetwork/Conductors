@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { type, source, totalCost, taskIds, agentIds, description } = req.body;
 
@@ -27,18 +27,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       description: description || ''
     };
 
-    dataStore.addSubmission(submission);
+    await dataStore.addSubmission(submission);
 
     return res.status(201).json({ success: true, submission });
   } else if (req.method === 'GET') {
-    const submissions = dataStore.getAllSubmissions();
+    const submissions = await dataStore.getAllSubmissions();
 
     // Build a lookup map of all tasks once to avoid N+1 lookups
-    const allTasks = dataStore.getAllTasks();
+    const allTasks = await dataStore.getAllTasks();
     const taskMap = new Map(allTasks.map(t => [t.id, t]));
 
     // Enrich submissions with current task statuses
-    const enriched = submissions.map(sub => {
+    const enriched = await Promise.all(submissions.map(async sub => {
       const tasks = sub.taskIds.map(id => taskMap.get(id)).filter(Boolean);
       const completedCount = tasks.filter(t => t?.status === 'completed').length;
       const failedCount = tasks.filter(t => t?.status === 'failed').length;
@@ -55,7 +55,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       if (currentStatus !== sub.status) {
-        dataStore.updateSubmission(sub.id, { status: currentStatus });
+        await dataStore.updateSubmission(sub.id, { status: currentStatus });
       }
 
       return {
@@ -69,7 +69,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           total: sub.taskCount
         }
       };
-    });
+    }));
 
     return res.status(200).json({ submissions: enriched, total: enriched.length });
   } else {

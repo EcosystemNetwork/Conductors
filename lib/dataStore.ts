@@ -1,3 +1,5 @@
+import { sql, initializeDatabase } from './db';
+
 interface JobOffering {
   name: string;
   description: string;
@@ -75,137 +77,296 @@ interface Submission {
   description: string;
 }
 
+// Helper to convert a database row to an Agent object
+function rowToAgent(row: any): Agent {
+  return {
+    id: row.id,
+    name: row.name,
+    skills: row.skills || [],
+    status: row.status,
+    registeredAt: Number(row.registered_at),
+    tasksCompleted: row.tasks_completed,
+    totalEarned: row.total_earned,
+    walletAddress: row.wallet_address || undefined,
+    lastHeartbeat: row.last_heartbeat ? Number(row.last_heartbeat) : undefined,
+    health: row.health || undefined,
+    costPerTask: row.cost_per_task || undefined,
+    jobOfferings: row.job_offerings || undefined,
+    capabilities: row.capabilities || undefined,
+  };
+}
+
+// Helper to convert a database row to a Task object
+function rowToTask(row: any): Task {
+  return {
+    id: row.id,
+    description: row.description,
+    requiredSkills: row.required_skills || [],
+    status: row.status,
+    assignedTo: row.assigned_to || undefined,
+    createdAt: Number(row.created_at),
+    completedAt: row.completed_at ? Number(row.completed_at) : undefined,
+    reward: row.reward,
+    priority: row.priority || undefined,
+    retryCount: row.retry_count || undefined,
+    maxRetries: row.max_retries || undefined,
+    lastAttemptAt: row.last_attempt_at ? Number(row.last_attempt_at) : undefined,
+    createdBy: row.created_by || undefined,
+    paymentMethod: row.payment_method || undefined,
+    paymentReceived: row.payment_received || undefined,
+    x402Payment: row.x402_payment || undefined,
+  };
+}
+
+// Helper to convert a database row to a Payout object
+function rowToPayout(row: any): Payout {
+  return {
+    id: row.id,
+    agentId: row.agent_id,
+    taskId: row.task_id,
+    amount: row.amount,
+    timestamp: Number(row.timestamp),
+    status: row.status,
+    transactionHash: row.transaction_hash || undefined,
+    paymentMethod: row.payment_method || undefined,
+    chainId: row.chain_id || undefined,
+    currency: row.currency || undefined,
+  };
+}
+
+// Helper to convert a database row to a Submission object
+function rowToSubmission(row: any): Submission {
+  return {
+    id: row.id,
+    type: row.type,
+    source: row.source,
+    submittedAt: Number(row.submitted_at),
+    totalCost: row.total_cost,
+    taskIds: row.task_ids || [],
+    agentIds: row.agent_ids || [],
+    status: row.status,
+    taskCount: row.task_count,
+    agentCount: row.agent_count,
+    description: row.description || '',
+  };
+}
+
 class DataStore {
-  private agents: Map<string, Agent> = new Map();
-  private tasks: Map<string, Task> = new Map();
-  private payouts: Map<string, Payout> = new Map();
-  private taskHistory: Map<string, Task> = new Map();
-  private submissions: Map<string, Submission> = new Map();
+  private initPromise: Promise<void> | null = null;
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = initializeDatabase().catch((err) => {
+        this.initPromise = null;
+        throw err;
+      });
+    }
+    return this.initPromise;
+  }
 
   // Agent methods
-  addAgent(agent: Agent): void {
-    this.agents.set(agent.id, agent);
+  async addAgent(agent: Agent): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO agents (id, name, skills, status, registered_at, tasks_completed, total_earned, wallet_address, last_heartbeat, health, cost_per_task, job_offerings, capabilities)
+      VALUES (${agent.id}, ${agent.name}, ${agent.skills}, ${agent.status}, ${agent.registeredAt}, ${agent.tasksCompleted}, ${agent.totalEarned}, ${agent.walletAddress || null}, ${agent.lastHeartbeat || null}, ${agent.health || null}, ${agent.costPerTask || null}, ${agent.jobOfferings ? JSON.stringify(agent.jobOfferings) : null}::jsonb, ${agent.capabilities ? JSON.stringify(agent.capabilities) : null}::jsonb)
+    `;
   }
 
-  getAgent(id: string): Agent | undefined {
-    return this.agents.get(id);
+  async getAgent(id: string): Promise<Agent | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM agents WHERE id = ${id}`;
+    return rows.length > 0 ? rowToAgent(rows[0]) : undefined;
   }
 
-  getAllAgents(): Agent[] {
-    return Array.from(this.agents.values());
+  async getAllAgents(): Promise<Agent[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM agents`;
+    return rows.map(rowToAgent);
   }
 
-  updateAgent(id: string, updates: Partial<Agent>): void {
-    const agent = this.agents.get(id);
-    if (agent) {
-      this.agents.set(id, { ...agent, ...updates });
-    }
+  async updateAgent(id: string, updates: Partial<Agent>): Promise<void> {
+    await this.ensureInitialized();
+    const agent = await this.getAgent(id);
+    if (!agent) return;
+    const merged = { ...agent, ...updates };
+    await sql`
+      UPDATE agents SET
+        name = ${merged.name},
+        skills = ${merged.skills},
+        status = ${merged.status},
+        registered_at = ${merged.registeredAt},
+        tasks_completed = ${merged.tasksCompleted},
+        total_earned = ${merged.totalEarned},
+        wallet_address = ${merged.walletAddress || null},
+        last_heartbeat = ${merged.lastHeartbeat || null},
+        health = ${merged.health || null},
+        cost_per_task = ${merged.costPerTask || null},
+        job_offerings = ${merged.jobOfferings ? JSON.stringify(merged.jobOfferings) : null}::jsonb,
+        capabilities = ${merged.capabilities ? JSON.stringify(merged.capabilities) : null}::jsonb
+      WHERE id = ${id}
+    `;
   }
 
   // Task methods
-  addTask(task: Task): void {
-    this.tasks.set(task.id, task);
+  async addTask(task: Task): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO tasks (id, description, required_skills, status, assigned_to, created_at, completed_at, reward, priority, retry_count, max_retries, last_attempt_at, created_by, payment_method, payment_received, x402_payment)
+      VALUES (${task.id}, ${task.description}, ${task.requiredSkills}, ${task.status}, ${task.assignedTo || null}, ${task.createdAt}, ${task.completedAt || null}, ${task.reward}, ${task.priority || 3}, ${task.retryCount || 0}, ${task.maxRetries || 3}, ${task.lastAttemptAt || null}, ${task.createdBy || null}, ${task.paymentMethod || null}, ${task.paymentReceived || false}, ${task.x402Payment ? JSON.stringify(task.x402Payment) : null}::jsonb)
+    `;
   }
 
-  getTask(id: string): Task | undefined {
-    return this.tasks.get(id);
+  async getTask(id: string): Promise<Task | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM tasks WHERE id = ${id}`;
+    return rows.length > 0 ? rowToTask(rows[0]) : undefined;
   }
 
-  getAllTasks(): Task[] {
-    return Array.from(this.tasks.values());
+  async getAllTasks(): Promise<Task[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM tasks`;
+    return rows.map(rowToTask);
   }
 
-  updateTask(id: string, updates: Partial<Task>): void {
-    const task = this.tasks.get(id);
-    if (task) {
-      this.tasks.set(id, { ...task, ...updates });
-    }
+  async updateTask(id: string, updates: Partial<Task>): Promise<void> {
+    await this.ensureInitialized();
+    const task = await this.getTask(id);
+    if (!task) return;
+    const merged = { ...task, ...updates };
+    await sql`
+      UPDATE tasks SET
+        description = ${merged.description},
+        required_skills = ${merged.requiredSkills},
+        status = ${merged.status},
+        assigned_to = ${merged.assignedTo || null},
+        created_at = ${merged.createdAt},
+        completed_at = ${merged.completedAt || null},
+        reward = ${merged.reward},
+        priority = ${merged.priority || 3},
+        retry_count = ${merged.retryCount || 0},
+        max_retries = ${merged.maxRetries || 3},
+        last_attempt_at = ${merged.lastAttemptAt || null},
+        created_by = ${merged.createdBy || null},
+        payment_method = ${merged.paymentMethod || null},
+        payment_received = ${merged.paymentReceived || false},
+        x402_payment = ${merged.x402Payment ? JSON.stringify(merged.x402Payment) : null}::jsonb
+      WHERE id = ${id}
+    `;
   }
 
   // Payout methods
-  addPayout(payout: Payout): void {
-    this.payouts.set(payout.id, payout);
+  async addPayout(payout: Payout): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO payouts (id, agent_id, task_id, amount, timestamp, status, transaction_hash, payment_method, chain_id, currency)
+      VALUES (${payout.id}, ${payout.agentId}, ${payout.taskId}, ${payout.amount}, ${payout.timestamp}, ${payout.status}, ${payout.transactionHash || null}, ${payout.paymentMethod || null}, ${payout.chainId || null}, ${payout.currency || null})
+    `;
   }
 
-  getAllPayouts(): Payout[] {
-    return Array.from(this.payouts.values());
+  async getAllPayouts(): Promise<Payout[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM payouts`;
+    return rows.map(rowToPayout);
   }
 
-  updatePayout(id: string, updates: Partial<Payout>): void {
-    const payout = this.payouts.get(id);
-    if (payout) {
-      this.payouts.set(id, { ...payout, ...updates });
-    }
+  async updatePayout(id: string, updates: Partial<Payout>): Promise<void> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM payouts WHERE id = ${id}`;
+    if (rows.length === 0) return;
+    const payout = rowToPayout(rows[0]);
+    const merged = { ...payout, ...updates };
+    await sql`
+      UPDATE payouts SET
+        agent_id = ${merged.agentId},
+        task_id = ${merged.taskId},
+        amount = ${merged.amount},
+        timestamp = ${merged.timestamp},
+        status = ${merged.status},
+        transaction_hash = ${merged.transactionHash || null},
+        payment_method = ${merged.paymentMethod || null},
+        chain_id = ${merged.chainId || null},
+        currency = ${merged.currency || null}
+      WHERE id = ${id}
+    `;
   }
 
   // Task history methods
-  addToTaskHistory(task: Task): void {
-    this.taskHistory.set(task.id, { ...task });
+  async addToTaskHistory(task: Task): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO task_history (id, description, required_skills, status, assigned_to, created_at, completed_at, reward, priority, retry_count, max_retries, last_attempt_at, created_by, payment_method, payment_received, x402_payment)
+      VALUES (${task.id}, ${task.description}, ${task.requiredSkills}, ${task.status}, ${task.assignedTo || null}, ${task.createdAt}, ${task.completedAt || null}, ${task.reward}, ${task.priority || 3}, ${task.retryCount || 0}, ${task.maxRetries || 3}, ${task.lastAttemptAt || null}, ${task.createdBy || null}, ${task.paymentMethod || null}, ${task.paymentReceived || false}, ${task.x402Payment ? JSON.stringify(task.x402Payment) : null}::jsonb)
+      ON CONFLICT (id) DO UPDATE SET
+        status = EXCLUDED.status,
+        assigned_to = EXCLUDED.assigned_to,
+        completed_at = EXCLUDED.completed_at,
+        retry_count = EXCLUDED.retry_count,
+        last_attempt_at = EXCLUDED.last_attempt_at,
+        payment_received = EXCLUDED.payment_received
+    `;
   }
 
-  getTaskHistory(): Task[] {
-    return Array.from(this.taskHistory.values()).sort((a, b) => 
-      (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt)
-    );
+  async getTaskHistory(): Promise<Task[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM task_history ORDER BY COALESCE(completed_at, created_at) DESC`;
+    return rows.map(rowToTask);
   }
 
   // Health monitoring methods
-  updateAgentHeartbeat(agentId: string): void {
-    const agent = this.agents.get(agentId);
-    if (agent) {
-      const now = Date.now();
-      this.agents.set(agentId, { 
-        ...agent, 
-        lastHeartbeat: now,
-        health: 'healthy'
-      });
-    }
+  async updateAgentHeartbeat(agentId: string): Promise<void> {
+    await this.ensureInitialized();
+    const now = Date.now();
+    await sql`
+      UPDATE agents SET last_heartbeat = ${now}, health = 'healthy'
+      WHERE id = ${agentId}
+    `;
   }
 
-  checkAgentHealth(): void {
+  async checkAgentHealth(): Promise<void> {
+    await this.ensureInitialized();
     const now = Date.now();
     const healthTimeout = 30000; // 30 seconds
     const degradedTimeout = 15000; // 15 seconds
 
-    this.agents.forEach((agent, id) => {
-      if (!agent.lastHeartbeat) return;
-      
-      const timeSinceHeartbeat = now - agent.lastHeartbeat;
-      let health: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-      let status = agent.status;
+    // Set unhealthy + offline for agents past healthTimeout
+    await sql`
+      UPDATE agents SET health = 'unhealthy', status = 'offline'
+      WHERE last_heartbeat IS NOT NULL
+        AND ${now} - last_heartbeat > ${healthTimeout}
+        AND (health != 'unhealthy' OR status != 'offline')
+    `;
 
-      if (timeSinceHeartbeat > healthTimeout) {
-        health = 'unhealthy';
-        status = 'offline';
-      } else if (timeSinceHeartbeat > degradedTimeout) {
-        health = 'degraded';
-      }
-
-      if (health !== agent.health || status !== agent.status) {
-        this.agents.set(id, { ...agent, health, status });
-      }
-    });
+    // Set degraded for agents past degradedTimeout but within healthTimeout
+    await sql`
+      UPDATE agents SET health = 'degraded'
+      WHERE last_heartbeat IS NOT NULL
+        AND ${now} - last_heartbeat > ${degradedTimeout}
+        AND ${now} - last_heartbeat <= ${healthTimeout}
+        AND health != 'degraded'
+    `;
   }
 
   // Task retry methods
-  incrementTaskRetry(taskId: string): boolean {
-    const task = this.tasks.get(taskId);
+  async incrementTaskRetry(taskId: string): Promise<boolean> {
+    await this.ensureInitialized();
+    const task = await this.getTask(taskId);
     if (!task) return false;
 
     const retryCount = (task.retryCount || 0) + 1;
     const maxRetries = task.maxRetries || 3;
 
     if (retryCount > maxRetries) {
-      this.updateTask(taskId, { 
-        status: 'failed', 
+      await this.updateTask(taskId, {
+        status: 'failed',
         retryCount,
         lastAttemptAt: Date.now()
       });
       return false;
     }
 
-    this.updateTask(taskId, { 
-      status: 'pending', 
+    await this.updateTask(taskId, {
+      status: 'pending',
       assignedTo: undefined,
       retryCount,
       lastAttemptAt: Date.now()
@@ -214,28 +375,49 @@ class DataStore {
   }
 
   // Submission history methods
-  addSubmission(submission: Submission): void {
-    this.submissions.set(submission.id, submission);
+  async addSubmission(submission: Submission): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO submissions (id, type, source, submitted_at, total_cost, task_ids, agent_ids, status, task_count, agent_count, description)
+      VALUES (${submission.id}, ${submission.type}, ${submission.source}, ${submission.submittedAt}, ${submission.totalCost}, ${submission.taskIds}, ${submission.agentIds}, ${submission.status}, ${submission.taskCount}, ${submission.agentCount}, ${submission.description})
+    `;
   }
 
-  getSubmission(id: string): Submission | undefined {
-    return this.submissions.get(id);
+  async getSubmission(id: string): Promise<Submission | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM submissions WHERE id = ${id}`;
+    return rows.length > 0 ? rowToSubmission(rows[0]) : undefined;
   }
 
-  getAllSubmissions(): Submission[] {
-    return Array.from(this.submissions.values()).sort((a, b) => b.submittedAt - a.submittedAt);
+  async getAllSubmissions(): Promise<Submission[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM submissions ORDER BY submitted_at DESC`;
+    return rows.map(rowToSubmission);
   }
 
-  updateSubmission(id: string, updates: Partial<Submission>): void {
-    const submission = this.submissions.get(id);
-    if (submission) {
-      this.submissions.set(id, { ...submission, ...updates });
-    }
+  async updateSubmission(id: string, updates: Partial<Submission>): Promise<void> {
+    await this.ensureInitialized();
+    const submission = await this.getSubmission(id);
+    if (!submission) return;
+    const merged = { ...submission, ...updates };
+    await sql`
+      UPDATE submissions SET
+        type = ${merged.type},
+        source = ${merged.source},
+        submitted_at = ${merged.submittedAt},
+        total_cost = ${merged.totalCost},
+        task_ids = ${merged.taskIds},
+        agent_ids = ${merged.agentIds},
+        status = ${merged.status},
+        task_count = ${merged.taskCount},
+        agent_count = ${merged.agentCount},
+        description = ${merged.description}
+      WHERE id = ${id}
+    `;
   }
 }
 
-// Use a global variable to persist data across API routes in development
-// In production (serverless), each invocation gets a fresh instance
+// Singleton instance - persists across API routes
 const globalForDataStore = globalThis as unknown as { dataStore: DataStore };
 
 export const dataStore = globalForDataStore.dataStore || new DataStore();

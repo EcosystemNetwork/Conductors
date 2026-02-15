@@ -1,16 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
   // Update health status for all agents
-  dataStore.checkAgentHealth();
+  await dataStore.checkAgentHealth();
 
-  const agents = dataStore.getAllAgents();
+  const agents = await dataStore.getAllAgents();
   const healthStats = {
     total: agents.length,
     healthy: agents.filter(a => a.health === 'healthy').length,

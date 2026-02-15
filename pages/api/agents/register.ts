@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     // Register a new agent
     const { name, skills, walletAddress } = req.body;
@@ -29,7 +29,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       health: 'healthy' as const
     };
 
-    dataStore.addAgent(agent);
+    await dataStore.addAgent(agent);
 
     return res.status(201).json({ 
       success: true,
@@ -37,7 +37,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   } else if (req.method === 'GET') {
     // Get all agents
-    const agents = dataStore.getAllAgents();
+    const agents = await dataStore.getAllAgents();
     return res.status(200).json({ agents });
   } else {
     res.setHeader('Allow', ['GET', 'POST']);
