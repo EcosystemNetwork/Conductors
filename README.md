@@ -27,6 +27,8 @@ This repository now includes a complete web application for managing AI agents, 
 - 🔌 **WebSocket Support** - Real-time updates for task assignments and completions
 - 🎮 **Remote Control API** - Control agents remotely via REST API
 - 📈 **Enhanced Dashboard** - Visual indicators for health, priority, and retry status
+- 🤖 **Bot-to-Site Integration** - Bots can create jobs, advertise capabilities, and purchase jobs
+- 💳 **x402 Payment Protocol** - Micropayment support for job purchases using x402
 
 ---
 

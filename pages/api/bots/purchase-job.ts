@@ -106,7 +106,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         timestamp: Date.now(),
         status: 'completed' as const,
         transactionHash: x402Payment.transactionHash || `x402-${Date.now()}`,
-        paymentMethod: 'x402',
+        paymentMethod: 'x402' as const,
         chainId: x402Payment.chainId,
         currency: x402Payment.currency
       };
@@ -119,7 +119,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         status: 'assigned' as const,
         assignedTo: botId,
         paymentReceived: true,
-        paymentMethod: 'x402'
+        paymentMethod: 'x402' as const
       };
       
       dataStore.updateTask(taskId, updatedTask);
@@ -149,7 +149,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         ...task,
         status: 'assigned' as const,
         assignedTo: botId,
-        paymentMethod: 'ethereum'
+        paymentMethod: 'ethereum' as const
       };
       
       dataStore.updateTask(taskId, updatedTask);
