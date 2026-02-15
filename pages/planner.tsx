@@ -278,20 +278,11 @@ export default function SwarmPlanner() {
               skills: data.skills,
             }),
           });
-          const result = await res.json();
-          return { nodeId: node.id, agent: result.agent, success: res.ok };
+          return { success: res.ok };
         })
       );
 
-      // Build a map from node ID to registered agent ID
-      const nodeToAgentId: Record<string, string> = {};
-      for (const r of agentResults) {
-        if (r.success && r.agent) {
-          nodeToAgentId[r.nodeId] = r.agent.id;
-        }
-      }
-
-      // Create all task nodes via API, assigned to connected agents
+      // Create all task nodes via API
       const taskNodes = nodes.filter(n => n.type === 'taskNode');
       const taskResults = await Promise.all(
         taskNodes.map(async (node) => {

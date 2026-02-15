@@ -459,8 +459,7 @@ export default function Home() {
               skills: data.skills,
             }),
           });
-          const result = await res.json();
-          return { nodeId: node.id, agent: result.agent, success: res.ok };
+          return { success: res.ok };
         })
       );
 
