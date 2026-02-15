@@ -894,3 +894,95 @@
 .sidebarButton:active {
   transform: translateY(0);
 }
+
+/* Submission History */
+.submissionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submissionCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.submissionCard:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.submissionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.submissionMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submissionType {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.submissionSource {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.submissionStatus {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.submissionDesc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+
+.submissionStats {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.submissionProgress {
+  margin-top: 10px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressDetails {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}

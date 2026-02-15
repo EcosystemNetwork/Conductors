@@ -78,6 +78,27 @@ interface Payout {
   transactionHash?: string;
 }
 
+interface Submission {
+  id: string;
+  type: 'job' | 'swarm';
+  source: 'dashboard' | 'planner' | 'bot-api';
+  submittedAt: number;
+  totalCost: number;
+  taskIds: string[];
+  agentIds: string[];
+  status: 'submitted' | 'in-progress' | 'completed' | 'failed';
+  taskCount: number;
+  agentCount: number;
+  description: string;
+  progress?: {
+    completed: number;
+    failed: number;
+    pending: number;
+    assigned: number;
+    total: number;
+  };
+}
+
 interface AgentNodeData {
   label: string;
   skills: string[];
@@ -224,6 +245,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [botListings, setBotListings] = useState<BotListing[]>([]);
   const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
@@ -257,12 +279,13 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes] = await Promise.all([
+      const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes, submissionsRes] = await Promise.all([
         fetch('/api/agents/register'),
         fetch('/api/tasks'),
         fetch('/api/payouts'),
         fetch('/api/tasks/history'),
-        fetch('/api/bots/listings')
+        fetch('/api/bots/listings'),
+        fetch('/api/tasks/submissions')
       ]);
 
       const agentsData = await agentsRes.json();
@@ -270,12 +293,14 @@ export default function Home() {
       const payoutsData = await payoutsRes.json();
       const historyData = await historyRes.json();
       const listingsData = await listingsRes.json();
+      const submissionsData = await submissionsRes.json();
 
       setAgents(agentsData.agents || []);
       setTasks(tasksData.tasks || []);
       setPayouts(payoutsData.payouts || []);
       setTaskHistory(historyData.history || []);
       setBotListings(listingsData.listings || []);
+      setSubmissions(submissionsData.submissions || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -341,6 +366,20 @@ export default function Home() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        // Record submission in history
+        await fetch('/api/tasks/submissions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'job',
+            source: 'dashboard',
+            totalCost: parseFloat(taskForm.reward),
+            taskIds: result.task ? [result.task.id] : [],
+            agentIds: result.task?.assignedTo ? [result.task.assignedTo] : [],
+            description: taskForm.description
+          })
+        });
         setTaskForm({ description: '', requiredSkills: '', reward: '10', priority: '3', maxRetries: '3' });
         fetchData();
       }
@@ -518,14 +557,30 @@ export default function Home() {
               reward: data.estimatedCost,
             }),
           });
-          return res.ok;
+          const result = await res.json();
+          return { ok: res.ok, taskId: result.task?.id };
         })
       );
 
       const allAgentsOk = agentResults.every(r => r.success);
-      const allTasksOk = taskResults.every(ok => ok);
+      const allTasksOk = taskResults.every(r => r && r.ok);
 
       if (allAgentsOk && allTasksOk) {
+        // Record swarm submission in history
+        const taskIds = taskResults.map(r => r.taskId).filter(Boolean);
+        const agentLabels = agentNodes.map(n => (n.data as AgentNodeData).label);
+        await fetch('/api/tasks/submissions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'swarm',
+            source: 'planner',
+            totalCost: totalPlannerCost,
+            taskIds,
+            agentIds: [],
+            description: `Swarm: ${agentLabels.join(', ')} → ${taskNodes.length} task(s)`
+          })
+        });
         setPlannerResult({
           success: true,
           message: `Successfully submitted ${agentResults.length} agent(s) and ${taskResults.length} task(s).`,
@@ -1687,6 +1742,59 @@ export default function Home() {
         {activeTab === 'history' && (
           <div className={s.content}>
             <h2 className={s.sectionTitle}>
+              Submission History <span>({submissions.length})</span>
+            </h2>
+            {submissions.length > 0 ? (
+              <div className={s.submissionList}>
+                {submissions.map((sub) => {
+                  const statusColor = sub.status === 'completed' ? '#10b981' : sub.status === 'failed' ? '#ef4444' : sub.status === 'in-progress' ? '#f59e0b' : '#6b7280';
+                  const progressPct = sub.progress && sub.progress.total > 0 ? Math.round(((sub.progress.completed + sub.progress.failed) / sub.progress.total) * 100) : 0;
+                  return (
+                    <div key={sub.id} className={s.submissionCard}>
+                      <div className={s.submissionHeader}>
+                        <div className={s.submissionMeta}>
+                          <span className={s.submissionType} style={{ backgroundColor: sub.type === 'swarm' ? '#8b5cf620' : '#3b82f620', color: sub.type === 'swarm' ? '#8b5cf6' : '#3b82f6' }}>
+                            {sub.type === 'swarm' ? '🎯 Swarm' : '⚡ Job'}
+                          </span>
+                          <span className={s.submissionSource}>
+                            via {sub.source}
+                          </span>
+                        </div>
+                        <span className={s.submissionStatus} style={{ backgroundColor: statusColor + '20', color: statusColor }}>
+                          {sub.status}
+                        </span>
+                      </div>
+                      <p className={s.submissionDesc}>{sub.description}</p>
+                      <div className={s.submissionStats}>
+                        <span>Tasks: {sub.taskCount}</span>
+                        <span>Cost: ${sub.totalCost.toFixed(2)}</span>
+                        <span>{new Date(sub.submittedAt).toLocaleString()}</span>
+                      </div>
+                      {sub.progress && sub.progress.total > 0 && (
+                        <div className={s.submissionProgress}>
+                          <div className={s.progressBar}>
+                            <div className={s.progressFill} style={{ width: `${progressPct}%`, backgroundColor: statusColor }} />
+                          </div>
+                          <div className={s.progressDetails}>
+                            <span style={{ color: '#10b981' }}>✓ {sub.progress.completed}</span>
+                            <span style={{ color: '#f59e0b' }}>● {sub.progress.assigned}</span>
+                            <span style={{ color: '#6b7280' }}>○ {sub.progress.pending}</span>
+                            {sub.progress.failed > 0 && <span style={{ color: '#ef4444' }}>✗ {sub.progress.failed}</span>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className={s.emptyState}>
+                <div className={s.emptyIcon}>📋</div>
+                No submissions yet. Create a task or submit a swarm to see history here.
+              </div>
+            )}
+
+            <h2 className={s.sectionTitle} style={{ marginTop: '32px' }}>
               Task History <span>({taskHistory.length})</span>
             </h2>
             <div className={s.tableContainer}>
