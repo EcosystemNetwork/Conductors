@@ -382,6 +382,7 @@ export default function SwarmPlanner() {
             onConnect={onConnect}
             isValidConnection={isValidConnection}
             nodeTypes={nodeTypes}
+            connectionRadius={40}
             fitView
             className={s.reactFlow}
           >

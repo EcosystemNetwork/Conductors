@@ -8,6 +8,8 @@
 }
 
 .react-flow__handle {
+  width: 16px;
+  height: 16px;
   background: var(--accent) !important;
   border: 2px solid white !important;
 }
