@@ -33,9 +33,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   } else if (req.method === 'GET') {
     const submissions = dataStore.getAllSubmissions();
 
+    // Build a lookup map of all tasks once to avoid N+1 lookups
+    const allTasks = dataStore.getAllTasks();
+    const taskMap = new Map(allTasks.map(t => [t.id, t]));
+
     // Enrich submissions with current task statuses
     const enriched = submissions.map(sub => {
-      const tasks = sub.taskIds.map(id => dataStore.getTask(id)).filter(Boolean);
+      const tasks = sub.taskIds.map(id => taskMap.get(id)).filter(Boolean);
       const completedCount = tasks.filter(t => t?.status === 'completed').length;
       const failedCount = tasks.filter(t => t?.status === 'failed').length;
       const pendingCount = tasks.filter(t => t?.status === 'pending').length;

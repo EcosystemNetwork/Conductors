@@ -563,12 +563,12 @@ export default function Home() {
       );
 
       const allAgentsOk = agentResults.every(r => r.success);
-      const allTasksOk = taskResults.every(r => r.ok);
+      const allTasksOk = taskResults.every(r => r && r.ok);
 
       if (allAgentsOk && allTasksOk) {
         // Record swarm submission in history
         const taskIds = taskResults.map(r => r.taskId).filter(Boolean);
-        const agentDescriptions = agentNodes.map(n => (n.data as AgentNodeData).label);
+        const agentLabels = agentNodes.map(n => (n.data as AgentNodeData).label);
         await fetch('/api/tasks/submissions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -578,7 +578,7 @@ export default function Home() {
             totalCost: totalPlannerCost,
             taskIds,
             agentIds: [],
-            description: `Swarm: ${agentDescriptions.join(', ')} → ${taskNodes.length} task(s)`
+            description: `Swarm: ${agentLabels.join(', ')} → ${taskNodes.length} task(s)`
           })
         });
         setPlannerResult({
