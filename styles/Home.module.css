@@ -67,6 +67,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-light) 100%);
+  /* Webkit prefix needed for background-clip: text support */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -608,7 +609,8 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
-  /* Use 16px minimum on mobile to prevent iOS auto-zoom on focus */
+  /* Use max(16px, 0.9rem) to prevent iOS auto-zoom on input focus
+     16px is the minimum font size to prevent zoom, while 0.9rem adapts to user preferences */
   font-size: max(16px, 0.9rem);
   transition: all var(--transition);
   outline: none;
