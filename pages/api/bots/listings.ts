@@ -9,10 +9,10 @@ import { dataStore } from '../../../lib/dataStore';
  *   skill?: string - Filter listings by skill (e.g., "claw", "trade")
  *   botId?: string - Filter listings by specific bot
  */
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     const { skill, botId } = req.query;
-    const agents = dataStore.getAllAgents();
+    const agents = await dataStore.getAllAgents();
 
     // Build listings from all bots that have job offerings
     const listings: Array<{

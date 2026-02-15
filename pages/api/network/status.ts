@@ -1,16 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
-  const agents = dataStore.getAllAgents();
-  const tasks = dataStore.getAllTasks();
-  const payouts = dataStore.getAllPayouts();
-  const history = dataStore.getTaskHistory();
+  const agents = await dataStore.getAllAgents();
+  const tasks = await dataStore.getAllTasks();
+  const payouts = await dataStore.getAllPayouts();
+  const history = await dataStore.getTaskHistory();
 
   // Calculate network statistics
   const stats = {

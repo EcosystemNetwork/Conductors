@@ -80,8 +80,11 @@ class RealtimeServer {
 
       case 'heartbeat':
         if (message.agentId) {
-          dataStore.updateAgentHeartbeat(message.agentId);
-          this.broadcastAgentUpdate(message.agentId);
+          dataStore.updateAgentHeartbeat(message.agentId).then(() => {
+            this.broadcastAgentUpdate(message.agentId!);
+          }).catch((err) => {
+            console.error('[WebSocket] Failed to update heartbeat:', err);
+          });
         }
         break;
 
@@ -127,8 +130,8 @@ class RealtimeServer {
   }
 
   // Broadcast methods for real-time updates
-  broadcastTaskUpdate(taskId: string) {
-    const task = dataStore.getTask(taskId);
+  async broadcastTaskUpdate(taskId: string) {
+    const task = await dataStore.getTask(taskId);
     if (!task) return;
 
     const message = {
@@ -145,8 +148,8 @@ class RealtimeServer {
     }
   }
 
-  broadcastAgentUpdate(agentId: string) {
-    const agent = dataStore.getAgent(agentId);
+  async broadcastAgentUpdate(agentId: string) {
+    const agent = await dataStore.getAgent(agentId);
     if (!agent) return;
 
     const message = {
@@ -161,8 +164,8 @@ class RealtimeServer {
     this.broadcastToAgent(agentId, message);
   }
 
-  broadcastTaskCreated(taskId: string) {
-    const task = dataStore.getTask(taskId);
+  async broadcastTaskCreated(taskId: string) {
+    const task = await dataStore.getTask(taskId);
     if (!task) return;
 
     this.broadcast({
@@ -171,8 +174,8 @@ class RealtimeServer {
     });
   }
 
-  broadcastTaskCompleted(taskId: string) {
-    const task = dataStore.getTask(taskId);
+  async broadcastTaskCompleted(taskId: string) {
+    const task = await dataStore.getTask(taskId);
     if (!task) return;
 
     this.broadcast({

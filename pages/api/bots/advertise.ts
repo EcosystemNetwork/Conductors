@@ -27,7 +27,7 @@ import { dataStore } from '../../../lib/dataStore';
  *   }
  * }
  */
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { 
       name, 
@@ -47,7 +47,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Check if bot already exists
-    const existingAgents = dataStore.getAllAgents();
+    const existingAgents = await dataStore.getAllAgents();
     const existingBot = existingAgents.find((agent: any) => agent.name === name);
 
     if (existingBot) {
@@ -64,7 +64,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         health: 'healthy' as const
       };
 
-      dataStore.updateAgent(existingBot.id, updatedAgent);
+      await dataStore.updateAgent(existingBot.id, updatedAgent);
 
       return res.status(200).json({ 
         success: true,
@@ -91,7 +91,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         capabilities
       };
 
-      dataStore.addAgent(agent);
+      await dataStore.addAgent(agent);
 
       return res.status(201).json({ 
         success: true,
@@ -101,7 +101,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   } else if (req.method === 'GET') {
     // Get all advertised bots
-    const agents = dataStore.getAllAgents();
+    const agents = await dataStore.getAllAgents();
     
     // Filter for only available bots
     const { available } = req.query;

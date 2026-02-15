@@ -9,6 +9,7 @@
     "export": "next export"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@tanstack/react-query": "^5.90.21",
     "@types/ws": "^8.18.1",
     "ethers": "^5.8.0",

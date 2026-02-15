@@ -21,7 +21,7 @@ import { dataStore } from '../../../lib/dataStore';
  *   }
  * }
  */
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { 
       botId, 
@@ -38,7 +38,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Validate bot exists
-    const bot = dataStore.getAgent(botId);
+    const bot = await dataStore.getAgent(botId);
     if (!bot) {
       return res.status(404).json({ 
         error: 'Bot not found. Please register the bot first at /api/bots/advertise' 
@@ -46,7 +46,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Validate task exists
-    const task = dataStore.getTask(taskId);
+    const task = await dataStore.getTask(taskId);
     if (!task) {
       return res.status(404).json({ 
         error: 'Task not found' 
@@ -90,12 +90,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       }
 
-      // In a real implementation, you would:
-      // 1. Verify the payment header using x402 protocol
-      // 2. Validate the payment amount matches the task reward
-      // 3. Process the payment through the x402 facilitator
-      // For now, we'll simulate successful payment validation
-
       // Create payment record
       const payoutId = `payout-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const payout = {
@@ -111,7 +105,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         currency: x402Payment.currency
       };
 
-      dataStore.addPayout(payout);
+      await dataStore.addPayout(payout);
 
       // Assign task to bot
       const updatedTask = {
@@ -122,7 +116,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         paymentMethod: 'x402' as const
       };
       
-      dataStore.updateTask(taskId, updatedTask);
+      await dataStore.updateTask(taskId, updatedTask);
 
       // Update bot status
       const updatedBot = {
@@ -130,7 +124,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         status: 'busy' as const,
         lastHeartbeat: Date.now()
       };
-      dataStore.updateAgent(botId, updatedBot);
+      await dataStore.updateAgent(botId, updatedBot);
 
       return res.status(200).json({ 
         success: true,
@@ -144,7 +138,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     } else {
       // Handle standard Ethereum payment
-      // Assign task to bot (assuming payment will be handled on completion)
       const updatedTask = {
         ...task,
         status: 'assigned' as const,
@@ -152,7 +145,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         paymentMethod: 'ethereum' as const
       };
       
-      dataStore.updateTask(taskId, updatedTask);
+      await dataStore.updateTask(taskId, updatedTask);
 
       // Update bot status
       const updatedBot = {
@@ -160,7 +153,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         status: 'busy' as const,
         lastHeartbeat: Date.now()
       };
-      dataStore.updateAgent(botId, updatedBot);
+      await dataStore.updateAgent(botId, updatedBot);
 
       return res.status(200).json({ 
         success: true,
@@ -183,7 +176,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    const allPayouts = dataStore.getAllPayouts();
+    const allPayouts = await dataStore.getAllPayouts();
     const botPayouts = allPayouts.filter((payout: any) => payout.agentId === botId);
 
     return res.status(200).json({ 

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
@@ -15,8 +15,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  const task = dataStore.getTask(taskId);
-  const agent = dataStore.getAgent(agentId);
+  const task = await dataStore.getTask(taskId);
+  const agent = await dataStore.getAgent(agentId);
 
   if (!task || !agent) {
     return res.status(404).json({ 
@@ -32,20 +32,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // Update task status
   const newStatus = success !== false ? 'completed' : 'failed';
-  dataStore.updateTask(taskId, {
+  await dataStore.updateTask(taskId, {
     status: newStatus,
     completedAt: Date.now()
   });
 
   // Add completed/failed task to history
-  const updatedTask = dataStore.getTask(taskId);
+  const updatedTask = await dataStore.getTask(taskId);
   if (updatedTask) {
-    dataStore.addToTaskHistory(updatedTask);
+    await dataStore.addToTaskHistory(updatedTask);
   }
 
   // Update agent
   if (success !== false) {
-    dataStore.updateAgent(agentId, {
+    await dataStore.updateAgent(agentId, {
       status: 'idle',
       tasksCompleted: agent.tasksCompleted + 1,
       totalEarned: agent.totalEarned + task.reward
@@ -63,30 +63,34 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       transactionHash: `0x${Math.random().toString(16).substring(2, 66)}` // Simulated tx hash
     };
 
-    dataStore.addPayout(payout);
+    await dataStore.addPayout(payout);
 
     // Simulate payout completion
-    setTimeout(() => {
-      dataStore.updatePayout(payoutId, { status: 'completed' });
+    setTimeout(async () => {
+      try {
+        await dataStore.updatePayout(payoutId, { status: 'completed' });
+      } catch (err) {
+        console.error('[Tasks] Failed to update payout status:', err);
+      }
     }, 1000);
 
     return res.status(200).json({ 
       success: true,
-      task: dataStore.getTask(taskId),
-      agent: dataStore.getAgent(agentId),
+      task: await dataStore.getTask(taskId),
+      agent: await dataStore.getAgent(agentId),
       payout
     });
   } else {
     // Task failed - attempt retry if within retry limit
-    dataStore.updateAgent(agentId, { status: 'idle' });
+    await dataStore.updateAgent(agentId, { status: 'idle' });
     
-    const retried = dataStore.incrementTaskRetry(taskId);
-    const retriedTask = dataStore.getTask(taskId);
+    const retried = await dataStore.incrementTaskRetry(taskId);
+    const retriedTask = await dataStore.getTask(taskId);
     
     return res.status(200).json({ 
       success: true,
       task: retriedTask,
-      agent: dataStore.getAgent(agentId),
+      agent: await dataStore.getAgent(agentId),
       retried,
       message: retried ? 'Task will be retried' : 'Task failed - max retries reached'
     });

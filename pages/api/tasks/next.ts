@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 import { TaskDispatcher } from '../../../lib/taskDispatcher';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
@@ -17,7 +17,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Get the next available task for this agent
-  const task = TaskDispatcher.getNextTaskForAgent(agentId);
+  const task = await TaskDispatcher.getNextTaskForAgent(agentId);
 
   if (!task) {
     return res.status(200).json({ 

@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 import { TaskDispatcher } from '../../../lib/taskDispatcher';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     // Create a new task
     const { description, requiredSkills, reward, priority, maxRetries } = req.body;
@@ -36,23 +36,23 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       retryCount: 0
     };
 
-    dataStore.addTask(task);
+    await dataStore.addTask(task);
 
     // Try to auto-assign to an available agent
-    const assignedAgent = TaskDispatcher.matchTaskToAgent(task);
+    const assignedAgent = await TaskDispatcher.matchTaskToAgent(task);
     if (assignedAgent) {
-      TaskDispatcher.assignTask(task.id, assignedAgent.id);
+      await TaskDispatcher.assignTask(task.id, assignedAgent.id);
     }
 
     return res.status(201).json({ 
       success: true,
-      task: dataStore.getTask(id),
+      task: await dataStore.getTask(id),
       assigned: !!assignedAgent,
       assignedTo: assignedAgent?.name
     });
   } else if (req.method === 'GET') {
     // Get all tasks
-    const tasks = dataStore.getAllTasks();
+    const tasks = await dataStore.getAllTasks();
     return res.status(200).json({ tasks });
   } else {
     res.setHeader('Allow', ['GET', 'POST']);

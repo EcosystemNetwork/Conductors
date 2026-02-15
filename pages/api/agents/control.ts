@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { dataStore } from '../../../lib/dataStore';
 import { TaskDispatcher } from '../../../lib/taskDispatcher';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
@@ -16,7 +16,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  const agent = dataStore.getAgent(agentId);
+  const agent = await dataStore.getAgent(agentId);
   if (!agent) {
     return res.status(404).json({ 
       error: 'Agent not found' 
@@ -26,20 +26,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (command) {
     case 'start':
       // Start the agent (set to idle)
-      dataStore.updateAgent(agentId, { status: 'idle' });
+      await dataStore.updateAgent(agentId, { status: 'idle' });
       return res.status(200).json({
         success: true,
         message: 'Agent started',
-        agent: dataStore.getAgent(agentId)
+        agent: await dataStore.getAgent(agentId)
       });
 
     case 'stop':
       // Stop the agent (set to offline)
-      dataStore.updateAgent(agentId, { status: 'offline' });
+      await dataStore.updateAgent(agentId, { status: 'offline' });
       return res.status(200).json({
         success: true,
         message: 'Agent stopped',
-        agent: dataStore.getAgent(agentId)
+        agent: await dataStore.getAgent(agentId)
       });
 
     case 'assign_task':
@@ -49,7 +49,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: 'taskId required for assign_task command' });
       }
 
-      const task = dataStore.getTask(taskId);
+      const task = await dataStore.getTask(taskId);
       if (!task) {
         return res.status(404).json({ error: 'Task not found' });
       }
@@ -58,7 +58,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: 'Task is not in pending status' });
       }
 
-      const assigned = TaskDispatcher.assignTask(taskId, agentId);
+      const assigned = await TaskDispatcher.assignTask(taskId, agentId);
       if (!assigned) {
         return res.status(400).json({ error: 'Failed to assign task' });
       }
@@ -66,8 +66,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(200).json({
         success: true,
         message: 'Task assigned to agent',
-        task: dataStore.getTask(taskId),
-        agent: dataStore.getAgent(agentId)
+        task: await dataStore.getTask(taskId),
+        agent: await dataStore.getAgent(agentId)
       });
 
     case 'update_skills':
@@ -77,18 +77,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: 'skills array required for update_skills command' });
       }
 
-      dataStore.updateAgent(agentId, { skills });
+      await dataStore.updateAgent(agentId, { skills });
       return res.status(200).json({
         success: true,
         message: 'Agent skills updated',
-        agent: dataStore.getAgent(agentId)
+        agent: await dataStore.getAgent(agentId)
       });
 
     case 'get_status':
       // Get current agent status
       return res.status(200).json({
         success: true,
-        agent: dataStore.getAgent(agentId)
+        agent: await dataStore.getAgent(agentId)
       });
 
     default:
