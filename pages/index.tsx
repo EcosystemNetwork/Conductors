@@ -261,6 +261,7 @@ export default function Home() {
   const [botJobResult, setBotJobResult] = useState<{ success: boolean; message: string } | null>(null);
   const [skillMdParsing, setSkillMdParsing] = useState(false);
   const [skillMdError, setSkillMdError] = useState<string | null>(null);
+  const [skillMdPasteContent, setSkillMdPasteContent] = useState('');
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -1240,11 +1241,18 @@ export default function Home() {
                       className={s.input}
                       style={{ width: '100%', minHeight: '120px', resize: 'vertical', fontFamily: 'monospace', fontSize: '12px', boxSizing: 'border-box' }}
                       placeholder={'# MyClawBot\n\n- **Skills:** claw, pickup, sort\n- **Cost Per Task:** $15\n- **Wallet Address:** 0x...'}
-                      onBlur={(e) => {
-                        const val = e.target.value.trim();
-                        if (val) handleSkillMdFile(val);
-                      }}
+                      value={skillMdPasteContent}
+                      onChange={(e) => setSkillMdPasteContent(e.target.value)}
                     />
+                    <button
+                      type="button"
+                      className={s.button}
+                      style={{ marginTop: '8px', width: '100%' }}
+                      disabled={!skillMdPasteContent.trim() || skillMdParsing}
+                      onClick={() => handleSkillMdFile(skillMdPasteContent.trim())}
+                    >
+                      {skillMdParsing ? 'Parsing...' : '📄 Parse skill.md'}
+                    </button>
                   </details>
 
                   {skillMdError && (

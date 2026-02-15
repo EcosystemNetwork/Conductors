@@ -46,9 +46,13 @@ function cleanValue(val: string): string {
 
 function parseSkillMd(content: string): ParsedSkillConfig {
   const config: ParsedSkillConfig = {};
+  const DEFAULT_JOB_PRICE = 10;
+
+  // Normalize line endings to \n
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   // Extract name from first H1 heading or "name:" field
-  const h1Match = content.match(/^#\s+(.+)$/m);
+  const h1Match = normalized.match(/^#\s+(.+)$/m);
   if (h1Match) {
     config.name = cleanValue(h1Match[1]);
   }
@@ -58,18 +62,18 @@ function parseSkillMd(content: string): ParsedSkillConfig {
   const fieldPattern = (field: string) =>
     new RegExp(`^[-*]?\\s*\\*{0,2}${field}\\*{0,2}\\s*[:]+\\s*\\*{0,2}\\s*(.+)$`, 'mi');
 
-  const nameField = content.match(fieldPattern('name'));
+  const nameField = normalized.match(fieldPattern('name'));
   if (nameField) {
     config.name = cleanValue(nameField[1]);
   }
 
-  const skillsField = content.match(fieldPattern('skills'));
+  const skillsField = normalized.match(fieldPattern('skills'));
   if (skillsField) {
     config.skills = cleanValue(skillsField[1]).split(',').map(s => s.trim()).filter(Boolean);
   }
 
   // Also look for skills as a bullet list under a "## Skills" heading
-  const skillsSectionMatch = content.match(/^##\s+Skills\s*\n((?:[-*]\s+.+\n?)+)/mi);
+  const skillsSectionMatch = normalized.match(/^##\s+Skills\s*\n((?:[-*]\s+.+\n?)+)/mi);
   if (skillsSectionMatch && !config.skills) {
     config.skills = skillsSectionMatch[1]
       .split('\n')
@@ -77,24 +81,24 @@ function parseSkillMd(content: string): ParsedSkillConfig {
       .filter(Boolean);
   }
 
-  const walletField = content.match(fieldPattern('wallet(?:\\s*address)?'));
+  const walletField = normalized.match(fieldPattern('wallet(?:\\s*address)?'));
   if (walletField) {
     config.walletAddress = cleanValue(walletField[1]);
   }
 
-  const costField = content.match(/^[-*]?\s*\*{0,2}cost(?:\s*per\s*task)?\*{0,2}\s*[:]+\s*\*{0,2}\s*\$?(\d+(?:\.\d+)?)/mi);
+  const costField = normalized.match(/^[-*]?\s*\*{0,2}cost(?:\s*per\s*task)?\*{0,2}\s*[:]+\s*\*{0,2}\s*\$?(\d+(?:\.\d+)?)/mi);
   if (costField) {
     config.costPerTask = parseFloat(costField[1]);
   }
 
-  const descField = content.match(fieldPattern('description'));
+  const descField = normalized.match(fieldPattern('description'));
   if (descField) {
     config.description = cleanValue(descField[1]);
   }
 
   // Parse job offerings section
-  const jobOfferingsSection = content.match(/^##\s+Job\s+Offerings?\s*\n([\s\S]*?)(?=\n##\s|\n#\s)/mi)
-    || content.match(/^##\s+Job\s+Offerings?\s*\n([\s\S]*)/mi);
+  const jobOfferingsSection = normalized.match(/^##\s+Job\s+Offerings?\s*\n([\s\S]*?)(?=\n##\s|\n#\s)/mi)
+    || normalized.match(/^##\s+Job\s+Offerings?\s*\n([\s\S]*)/mi);
   if (jobOfferingsSection) {
     const offerings: ParsedSkillConfig['jobOfferings'] = [];
     const offeringBlocks = jobOfferingsSection[1].split(/^###\s+/m).filter(Boolean);
@@ -111,7 +115,7 @@ function parseSkillMd(content: string): ParsedSkillConfig {
       offerings.push({
         name: offeringName,
         description: offeringDesc ? cleanValue(offeringDesc[1]) : offeringName,
-        price: offeringPrice ? parseFloat(offeringPrice[1]) : config.costPerTask || 10,
+        price: offeringPrice ? parseFloat(offeringPrice[1]) : config.costPerTask || DEFAULT_JOB_PRICE,
         skills: offeringSkills
           ? cleanValue(offeringSkills[1]).split(',').map(s => s.trim()).filter(Boolean)
           : config.skills || [],
@@ -124,8 +128,8 @@ function parseSkillMd(content: string): ParsedSkillConfig {
   }
 
   // Parse capabilities section
-  const capabilitiesSection = content.match(/^##\s+Capabilities\s*\n([\s\S]*?)(?=\n##\s|\n#\s)/mi)
-    || content.match(/^##\s+Capabilities\s*\n([\s\S]*)/mi);
+  const capabilitiesSection = normalized.match(/^##\s+Capabilities\s*\n([\s\S]*?)(?=\n##\s|\n#\s)/mi)
+    || normalized.match(/^##\s+Capabilities\s*\n([\s\S]*)/mi);
   if (capabilitiesSection) {
     const capText = capabilitiesSection[1];
     const capabilities: ParsedSkillConfig['capabilities'] = {};
