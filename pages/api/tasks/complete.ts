@@ -67,7 +67,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Simulate payout completion
     setTimeout(async () => {
-      await dataStore.updatePayout(payoutId, { status: 'completed' });
+      try {
+        await dataStore.updatePayout(payoutId, { status: 'completed' });
+      } catch (err) {
+        console.error('[Tasks] Failed to update payout status:', err);
+      }
     }, 1000);
 
     return res.status(200).json({ 

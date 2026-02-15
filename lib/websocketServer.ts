@@ -82,6 +82,8 @@ class RealtimeServer {
         if (message.agentId) {
           dataStore.updateAgentHeartbeat(message.agentId).then(() => {
             this.broadcastAgentUpdate(message.agentId!);
+          }).catch((err) => {
+            console.error('[WebSocket] Failed to update heartbeat:', err);
           });
         }
         break;

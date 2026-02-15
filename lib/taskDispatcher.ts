@@ -76,7 +76,7 @@ export class TaskDispatcher {
 
     const matchingTask = matchingTasks[0];
     await this.assignTask(matchingTask.id, agentId);
-    return dataStore.getTask(matchingTask.id);
+    return await dataStore.getTask(matchingTask.id);
   }
 
   /**
