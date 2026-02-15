@@ -361,7 +361,7 @@ export default function SwarmPlanner() {
           {submitResult && (
             <div style={{
               padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '0',
               fontSize: '0.875rem',
               fontWeight: 500,
               background: submitResult.success ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',

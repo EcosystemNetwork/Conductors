@@ -152,7 +152,7 @@
 
 .nav::-webkit-scrollbar-thumb {
   background: var(--accent);
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 @media (min-width: 768px) {
@@ -451,7 +451,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 100px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
@@ -639,7 +639,7 @@
   padding: 6px 14px;
   background: var(--bg-glass);
   border: 1px solid var(--border-color);
-  border-radius: 100px;
+  border-radius: 0;
   color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
@@ -905,7 +905,7 @@
 .submissionCard {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 16px;
   transition: border-color 0.2s;
 }
@@ -929,7 +929,7 @@
 
 .submissionType {
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 600;
 }
@@ -941,7 +941,7 @@
 
 .submissionStatus {
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 11px;
   font-weight: 600;
   text-transform: capitalize;
@@ -969,13 +969,13 @@
   width: 100%;
   height: 6px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 0;
   transition: width 0.3s ease;
 }
 

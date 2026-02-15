@@ -156,7 +156,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
     <div style={{
       background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
       padding: '16px',
-      borderRadius: '8px',
+      borderRadius: '0',
       minWidth: '200px',
       color: 'white',
       boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
@@ -172,7 +172,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
             <span key={idx} style={{
               background: 'rgba(255, 255, 255, 0.2)',
               padding: '2px 8px',
-              borderRadius: '12px',
+              borderRadius: '0',
               fontSize: '11px',
               fontWeight: '500'
             }}>{skill}</span>
@@ -191,7 +191,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
     <div style={{
       background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
       padding: '16px',
-      borderRadius: '8px',
+      borderRadius: '0',
       minWidth: '200px',
       color: 'white',
       boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
@@ -208,7 +208,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
             <span key={idx} style={{
               background: 'rgba(255, 255, 255, 0.2)',
               padding: '2px 8px',
-              borderRadius: '12px',
+              borderRadius: '0',
               fontSize: '11px',
               fontWeight: '500'
             }}>{skill}</span>
@@ -736,7 +736,7 @@ export default function Home() {
                 style: {
                   background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
                   border: 'none',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '0',
                   padding: '0.625rem 1.25rem',
                   fontWeight: 600,
                   fontSize: '0.875rem',
@@ -1258,7 +1258,7 @@ export default function Home() {
                           <td className={s.td}>
                             <span style={{ 
                               padding: '2px 8px', 
-                              borderRadius: '4px', 
+                              borderRadius: '0', 
                               fontSize: '11px',
                               backgroundColor: getPriorityColor(task.priority) + '20',
                               color: getPriorityColor(task.priority),
@@ -1376,7 +1376,7 @@ export default function Home() {
               padding: '20px',
               background: 'var(--bg-glass)',
               border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: '0',
             }}>
               <div>
                 <h2 className={s.sectionTitle}>Swarm Task Planner</h2>
@@ -1387,7 +1387,7 @@ export default function Home() {
                   background: 'var(--bg-glass)',
                   border: '1px solid var(--border-color)',
                   padding: '8px 16px',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '0',
                 }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Cost:</span>
                   <span style={{ 
@@ -1407,7 +1407,7 @@ export default function Home() {
                     color: 'white',
                     border: 'none',
                     padding: '10px 20px',
-                    borderRadius: 'var(--radius-md)',
+                    borderRadius: '0',
                     fontWeight: 600,
                     fontSize: '0.875rem',
                     cursor: (edges.length === 0 || plannerSubmitting) ? 'not-allowed' : 'pointer',
@@ -1424,7 +1424,7 @@ export default function Home() {
               <div style={{
                 marginBottom: '16px',
                 padding: '12px 16px',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: '0',
                 fontSize: '0.875rem',
                 fontWeight: 500,
                 background: plannerResult.success ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -1445,7 +1445,7 @@ export default function Home() {
                 width: '300px',
                 background: 'var(--bg-glass)',
                 border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: '0',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -1475,7 +1475,7 @@ export default function Home() {
                 <div style={{
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '0',
                   padding: '16px',
                 }}>
                   <h4 style={{ 
@@ -1500,7 +1500,7 @@ export default function Home() {
                       marginBottom: '10px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1517,7 +1517,7 @@ export default function Home() {
                       marginBottom: '10px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1534,7 +1534,7 @@ export default function Home() {
                       marginBottom: '12px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1555,7 +1555,7 @@ export default function Home() {
                 <div style={{
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '0',
                   padding: '16px',
                 }}>
                   <h4 style={{ 
@@ -1580,7 +1580,7 @@ export default function Home() {
                       marginBottom: '10px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1597,7 +1597,7 @@ export default function Home() {
                       marginBottom: '10px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1614,7 +1614,7 @@ export default function Home() {
                       marginBottom: '10px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1631,7 +1631,7 @@ export default function Home() {
                       marginBottom: '12px',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: '0',
                       color: 'var(--text-primary)',
                       fontSize: '0.875rem',
                       boxSizing: 'border-box',
@@ -1652,7 +1652,7 @@ export default function Home() {
                 <div style={{
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: '0',
                   padding: '16px',
                   marginTop: 'auto',
                 }}>
@@ -1674,7 +1674,7 @@ export default function Home() {
                         width: '20px',
                         height: '20px',
                         background: '#6366f1',
-                        borderRadius: '4px',
+                        borderRadius: '0',
                       }}></div>
                       <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Agent Node</span>
                     </div>
@@ -1683,7 +1683,7 @@ export default function Home() {
                         width: '20px',
                         height: '20px',
                         background: '#22c55e',
-                        borderRadius: '4px',
+                        borderRadius: '0',
                       }}></div>
                       <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Task Node</span>
                     </div>
@@ -1706,7 +1706,7 @@ export default function Home() {
                 flex: 1,
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: '0',
                 overflow: 'hidden',
                 position: 'relative',
               }}>
@@ -1819,7 +1819,7 @@ export default function Home() {
                           <td className={s.td}>
                             <span style={{ 
                               padding: '2px 8px', 
-                              borderRadius: '4px', 
+                              borderRadius: '0', 
                               fontSize: '11px',
                               backgroundColor: getPriorityColor(task.priority) + '20',
                               color: getPriorityColor(task.priority),
