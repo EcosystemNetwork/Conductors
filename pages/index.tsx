@@ -161,7 +161,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
       color: 'white',
       boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
     }}>
-      <Handle type="target" position={Position.Left} style={{ background: '#a5b4fc', border: '2px solid white', width: 10, height: 10 }} />
+      <Handle type="target" position={Position.Left} style={{ background: '#a5b4fc', border: '2px solid white', width: 16, height: 16 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         <span style={{ fontSize: '20px' }}>🤖</span>
         <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{data.label}</span>
@@ -180,7 +180,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
         </div>
         <div style={{ fontSize: '12px', opacity: 0.9 }}>💰 ${data.costPerTask}/task</div>
       </div>
-      <Handle type="source" position={Position.Right} style={{ background: '#a5b4fc', border: '2px solid white', width: 10, height: 10 }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#a5b4fc', border: '2px solid white', width: 16, height: 16 }} />
     </div>
   );
 };
@@ -196,7 +196,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
       color: 'white',
       boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
     }}>
-      <Handle type="target" position={Position.Left} style={{ background: '#86efac', border: '2px solid white', width: 10, height: 10 }} />
+      <Handle type="target" position={Position.Left} style={{ background: '#86efac', border: '2px solid white', width: 16, height: 16 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         <span style={{ fontSize: '20px' }}>⚡</span>
         <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{data.label}</span>
@@ -216,7 +216,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
         </div>
         <div style={{ fontSize: '12px', opacity: 0.9 }}>Est. ${data.estimatedCost}</div>
       </div>
-      <Handle type="source" position={Position.Right} style={{ background: '#86efac', border: '2px solid white', width: 10, height: 10 }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#86efac', border: '2px solid white', width: 16, height: 16 }} />
     </div>
   );
 };
@@ -1718,6 +1718,7 @@ export default function Home() {
                   onConnect={onConnect}
                   isValidConnection={isValidConnection}
                   nodeTypes={nodeTypes}
+                  connectionRadius={40}
                   fitView
                 >
                   <Background />
