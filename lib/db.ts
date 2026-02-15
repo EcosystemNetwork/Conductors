@@ -1,18 +1,34 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 
-const DATABASE_URL = process.env.DATABASE_URL;
+let _sql: NeonQueryFunction<false, false> | null = null;
 
-if (!DATABASE_URL) {
-  console.warn('[DB] DATABASE_URL not set - database operations will fail. Set DATABASE_URL in your environment.');
+function getSql() {
+  if (!_sql) {
+    const DATABASE_URL = process.env.DATABASE_URL;
+    if (!DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set. Set DATABASE_URL in your environment.');
+    }
+    _sql = neon(DATABASE_URL);
+  }
+  return _sql;
 }
 
-export const sql = neon(DATABASE_URL || '');
+export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
+  apply(_target, _thisArg, args) {
+    return (getSql() as any)(...args);
+  },
+  get(_target, prop) {
+    const realSql = getSql();
+    const val = (realSql as any)[prop];
+    return typeof val === 'function' ? val.bind(realSql) : val;
+  }
+});
 
 let initialized = false;
 
 export async function initializeDatabase() {
   if (initialized) return;
-  if (!DATABASE_URL) {
+  if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 

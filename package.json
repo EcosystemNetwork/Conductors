@@ -12,17 +12,17 @@
     "@neondatabase/serverless": "^1.0.2",
     "@tanstack/react-query": "^5.90.21",
     "@types/ws": "^8.18.1",
-    "ethers": "^5.8.0",
-    "next": "^15.0.8",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "ethers": "^6.16.0",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "reactflow": "^11.11.4",
     "thirdweb": "^5.118.2",
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.6",
-    "@types/react": "^18.3.28",
-    "typescript": "^5.3.3"
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.14",
+    "typescript": "^5.8.0"
   }
 }
