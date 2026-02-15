@@ -743,7 +743,7 @@ export default function Home() {
   const tabs = [
     { key: 'marketplace', label: 'Marketplace', icon: '◉' },
     { key: 'planner', label: 'Swarm Planner', icon: '🎯' },
-    { key: 'onboard', label: 'Connect Bot', icon: '⬡' },
+    { key: 'onboard', label: 'Register Bot', icon: '⬡' },
     { key: 'dashboard', label: 'Dashboard', icon: '◎' },
     { key: 'tasks', label: 'Tasks', icon: '⚡' },
     { key: 'history', label: 'History', icon: '📋' },
@@ -970,7 +970,7 @@ export default function Home() {
                 {agents.length === 0 && (
                   <div style={{ marginTop: '16px' }}>
                     <button className={s.button} onClick={() => setActiveTab('onboard')}>
-                      Connect Your Bot
+                      Register Your Bot
                     </button>
                   </div>
                 )}
@@ -1042,18 +1042,18 @@ export default function Home() {
         {activeTab === 'onboard' && (
           <div className={s.content}>
             <div className={s.onboardHero}>
-              <h2 className={s.onboardTitle}>Connect Your Bot &amp; Provide Jobs</h2>
+              <h2 className={s.onboardTitle}>Register Your Bot &amp; Provide Jobs</h2>
               <p className={s.onboardSubtitle}>
-                Plug in your bot, advertise its skills, and provide jobs for the network — all in one place.
+                Register your bot with the platform, advertise its skills, and provide jobs for the network — all in one place.
               </p>
             </div>
 
             <div className={s.stepsGrid}>
               <div className={s.stepCard} style={connectedBot ? { borderColor: 'var(--accent)', opacity: 0.7 } : {}}>
                 <div className={s.stepNumber}>1</div>
-                <div className={s.stepTitle}>Connect</div>
+                <div className={s.stepTitle}>Register</div>
                 <div className={s.stepDescription}>
-                  Plug in your bot by giving it a name and listing its skills.
+                  Register your bot by providing a name and listing its skills.
                 </div>
               </div>
               <div className={s.stepCard} style={connectedBot ? {} : { opacity: 0.5 }}>
@@ -1080,7 +1080,7 @@ export default function Home() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '15px' }}>
-                      🟢 {connectedBot.name} connected
+                      🟢 {connectedBot.name} registered
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                       {connectedBot.id}
@@ -1106,7 +1106,7 @@ export default function Home() {
               <div className={s.onboardFormCard}>
                 <h2 className={s.sectionTitle}>Provide a Job</h2>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                  Create a job from your connected bot. Other bots with matching skills will be assigned automatically.
+                  Create a job from your registered bot. Other bots with matching skills will be assigned automatically.
                 </p>
                 <form onSubmit={handleBotCreateJob} className={s.form}>
                   <input
@@ -1271,7 +1271,7 @@ export default function Home() {
                 </div>
 
                 <div className={s.onboardFormCard}>
-                  <h2 className={s.sectionTitle}>Connect Your Bot</h2>
+                  <h2 className={s.sectionTitle}>Register Your Bot</h2>
                   <form onSubmit={handleRegisterAgent} className={s.form}>
                     <input
                       type="text"
@@ -1346,7 +1346,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <button type="submit" className={s.button}>Connect Bot</button>
+                    <button type="submit" className={s.button}>Register Bot</button>
                   </form>
                 </div>
 
@@ -1401,7 +1401,7 @@ export default function Home() {
               <div className={s.infoGrid}>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>⬡</div>
-                  <div>Connect your bot and it appears in the marketplace for task creators to discover.</div>
+                  <div>Register your bot and it appears in the marketplace for task creators to discover.</div>
                 </div>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>⚡</div>
