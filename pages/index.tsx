@@ -251,6 +251,14 @@ export default function Home() {
   const [skillFilter, setSkillFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState(emptyAgentForm);
+  const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(null);
+  const [botJobForm, setBotJobForm] = useState({
+    description: '',
+    requiredSkills: '',
+    reward: '10',
+    priority: '3',
+  });
+  const [botJobResult, setBotJobResult] = useState<{ success: boolean; message: string } | null>(null);
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -277,6 +285,11 @@ export default function Home() {
     cost: '10'
   });
 
+  const safeJson = async (res: Response) => {
+    if (!res.ok) return {};
+    try { return await res.json(); } catch { return {}; }
+  };
+
   const fetchData = async () => {
     try {
       const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes, submissionsRes] = await Promise.all([
@@ -288,12 +301,12 @@ export default function Home() {
         fetch('/api/tasks/submissions')
       ]);
 
-      const agentsData = await agentsRes.json();
-      const tasksData = await tasksRes.json();
-      const payoutsData = await payoutsRes.json();
-      const historyData = await historyRes.json();
-      const listingsData = await listingsRes.json();
-      const submissionsData = await submissionsRes.json();
+      const agentsData = await safeJson(agentsRes);
+      const tasksData = await safeJson(tasksRes);
+      const payoutsData = await safeJson(payoutsRes);
+      const historyData = await safeJson(historyRes);
+      const listingsData = await safeJson(listingsRes);
+      const submissionsData = await safeJson(submissionsRes);
 
       setAgents(agentsData.agents || []);
       setTasks(tasksData.tasks || []);
@@ -342,11 +355,56 @@ export default function Home() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        const registeredBot = result.agent;
+        setConnectedBot({
+          id: registeredBot.id,
+          name: registeredBot.name,
+          skills: registeredBot.skills || [],
+        });
+        setBotJobForm(prev => ({
+          ...prev,
+          requiredSkills: agentForm.skills,
+        }));
         setAgentForm(emptyAgentForm);
         fetchData();
       }
     } catch (error) {
       console.error('Error registering agent:', error);
+    }
+  };
+
+  const handleBotCreateJob = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!connectedBot) return;
+    try {
+      const response = await fetch('/api/bots/create-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          botId: connectedBot.id,
+          description: botJobForm.description,
+          requiredSkills: botJobForm.requiredSkills.split(',').map(s => s.trim()),
+          reward: parseFloat(botJobForm.reward),
+          priority: parseInt(botJobForm.priority),
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setBotJobResult({
+          success: true,
+          message: `Job created! ${result.assigned ? `Assigned to ${result.assignedTo}` : 'Waiting for a matching bot'}`
+        });
+        setBotJobForm({ description: '', requiredSkills: connectedBot.skills.join(', '), reward: '10', priority: '3' });
+        fetchData();
+      } else {
+        const error = await response.json();
+        setBotJobResult({ success: false, message: error.error || 'Failed to create job' });
+      }
+    } catch (error) {
+      console.error('Error creating bot job:', error);
+      setBotJobResult({ success: false, message: 'Network error creating job' });
     }
   };
 
@@ -646,7 +704,7 @@ export default function Home() {
   const tabs = [
     { key: 'marketplace', label: 'Marketplace', icon: '◉' },
     { key: 'planner', label: 'Swarm Planner', icon: '🎯' },
-    { key: 'onboard', label: 'Onboard Your Bot', icon: '⬡' },
+    { key: 'onboard', label: 'Connect Bot', icon: '⬡' },
     { key: 'dashboard', label: 'Dashboard', icon: '◎' },
     { key: 'tasks', label: 'Tasks', icon: '⚡' },
     { key: 'history', label: 'History', icon: '📋' },
@@ -873,7 +931,7 @@ export default function Home() {
                 {agents.length === 0 && (
                   <div style={{ marginTop: '16px' }}>
                     <button className={s.button} onClick={() => setActiveTab('onboard')}>
-                      Onboard Your Bot
+                      Connect Your Bot
                     </button>
                   </div>
                 )}
@@ -945,28 +1003,28 @@ export default function Home() {
         {activeTab === 'onboard' && (
           <div className={s.content}>
             <div className={s.onboardHero}>
-              <h2 className={s.onboardTitle}>Bring Your Bot to the Network</h2>
+              <h2 className={s.onboardTitle}>Connect Your Bot &amp; Provide Jobs</h2>
               <p className={s.onboardSubtitle}>
-                Register your AI agent, get matched with tasks, and earn rewards — all on-chain.
+                Plug in your bot, advertise its skills, and provide jobs for the network — all in one place.
               </p>
             </div>
 
             <div className={s.stepsGrid}>
-              <div className={s.stepCard}>
+              <div className={s.stepCard} style={connectedBot ? { borderColor: 'var(--accent)', opacity: 0.7 } : {}}>
                 <div className={s.stepNumber}>1</div>
-                <div className={s.stepTitle}>Register</div>
+                <div className={s.stepTitle}>Connect</div>
                 <div className={s.stepDescription}>
-                  Give your bot a name and list its skills so task creators can find it.
+                  Plug in your bot by giving it a name and listing its skills.
                 </div>
               </div>
-              <div className={s.stepCard}>
+              <div className={s.stepCard} style={connectedBot ? {} : { opacity: 0.5 }}>
                 <div className={s.stepNumber}>2</div>
-                <div className={s.stepTitle}>Get Matched</div>
+                <div className={s.stepTitle}>Provide a Job</div>
                 <div className={s.stepDescription}>
-                  The network automatically assigns tasks that match your bot&apos;s skills.
+                  Create a job for other bots to pick up, or let your bot get matched automatically.
                 </div>
               </div>
-              <div className={s.stepCard}>
+              <div className={s.stepCard} style={{ opacity: 0.5 }}>
                 <div className={s.stepNumber}>3</div>
                 <div className={s.stepTitle}>Earn Rewards</div>
                 <div className={s.stepDescription}>
@@ -975,96 +1033,245 @@ export default function Home() {
               </div>
             </div>
 
-            <div className={s.onboardFormCard}>
-              <h2 className={s.sectionTitle}>Register Your Bot</h2>
-              <form onSubmit={handleRegisterAgent} className={s.form}>
-                <input
-                  type="text"
-                  placeholder="Bot Name (e.g., ClawBot-1)"
-                  value={agentForm.name}
-                  onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
-                  className={s.input}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Skills (comma-separated: claw, pickup, sort, trade)"
-                  value={agentForm.skills}
-                  onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
-                  className={s.input}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Wallet Address (optional)"
-                  value={agentForm.walletAddress}
-                  onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
-                  className={s.input}
-                />
-                <input
-                  type="number"
-                  placeholder="Default Cost Per Task (optional)"
-                  value={agentForm.costPerTask}
-                  onChange={(e) => setAgentForm({ ...agentForm, costPerTask: e.target.value })}
-                  className={s.input}
-                />
+            {connectedBot && (
+              <div className={s.onboardFormCard} style={{ borderColor: 'var(--accent)', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div className={s.botAvatar} style={{ width: '36px', height: '36px', fontSize: '14px' }}>
+                    {connectedBot.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '15px' }}>
+                      🟢 {connectedBot.name} connected
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                      {connectedBot.id}
+                    </div>
+                  </div>
+                  <button
+                    className={s.button}
+                    style={{ padding: '6px 14px', fontSize: '12px' }}
+                    onClick={() => { setConnectedBot(null); setBotJobResult(null); }}
+                  >
+                    Disconnect
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {connectedBot.skills.map((skill, idx) => (
+                    <span key={idx} className={s.badge}>{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                <div style={{
-                  borderTop: '1px solid var(--border-color)',
-                  paddingTop: '16px',
-                  marginTop: '8px',
-                }}>
-                  <label style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: '12px' }}>
-                    💼 Add a Job Offering (optional)
-                  </label>
+            {connectedBot && (
+              <div className={s.onboardFormCard}>
+                <h2 className={s.sectionTitle}>Provide a Job</h2>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Create a job from your connected bot. Other bots with matching skills will be assigned automatically.
+                </p>
+                <form onSubmit={handleBotCreateJob} className={s.form}>
                   <input
                     type="text"
-                    placeholder="Job Name (e.g., Pick and Sort Objects)"
-                    value={agentForm.jobOfferingName}
-                    onChange={(e) => setAgentForm({ ...agentForm, jobOfferingName: e.target.value })}
+                    placeholder="Job Description (e.g., Sort items in warehouse zone A)"
+                    value={botJobForm.description}
+                    onChange={(e) => setBotJobForm({ ...botJobForm, description: e.target.value })}
                     className={s.input}
+                    required
                   />
                   <input
                     type="text"
-                    placeholder="Job Description"
-                    value={agentForm.jobOfferingDescription}
-                    onChange={(e) => setAgentForm({ ...agentForm, jobOfferingDescription: e.target.value })}
+                    placeholder="Required Skills (comma-separated: claw, pickup, sort)"
+                    value={botJobForm.requiredSkills}
+                    onChange={(e) => setBotJobForm({ ...botJobForm, requiredSkills: e.target.value })}
                     className={s.input}
+                    required
                   />
                   <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
+                        Reward ($)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Reward"
+                        value={botJobForm.reward}
+                        onChange={(e) => setBotJobForm({ ...botJobForm, reward: e.target.value })}
+                        className={s.input}
+                        required
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
+                        Priority (1=High, 5=Low)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        placeholder="Priority"
+                        value={botJobForm.priority}
+                        onChange={(e) => setBotJobForm({ ...botJobForm, priority: e.target.value })}
+                        className={s.input}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className={s.button}>⚡ Provide Job</button>
+                </form>
+                {botJobResult && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '12px 16px',
+                    background: botJobResult.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    border: `1px solid ${botJobResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '13px',
+                    color: botJobResult.success ? '#10b981' : '#ef4444',
+                  }}>
+                    {botJobResult.success ? '✓' : '✗'} {botJobResult.message}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!connectedBot && (
+              <>
+                <div className={s.onboardFormCard}>
+                  <h2 className={s.sectionTitle}>Connect Your Bot</h2>
+                  <form onSubmit={handleRegisterAgent} className={s.form}>
                     <input
-                      type="number"
-                      placeholder="Price ($)"
-                      value={agentForm.jobOfferingPrice}
-                      onChange={(e) => setAgentForm({ ...agentForm, jobOfferingPrice: e.target.value })}
+                      type="text"
+                      placeholder="Bot Name (e.g., ClawBot-1)"
+                      value={agentForm.name}
+                      onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                       className={s.input}
-                      style={{ flex: 1 }}
+                      required
                     />
                     <input
                       type="text"
-                      placeholder="Job Skills (comma-separated)"
-                      value={agentForm.jobOfferingSkills}
-                      onChange={(e) => setAgentForm({ ...agentForm, jobOfferingSkills: e.target.value })}
+                      placeholder="Skills (comma-separated: claw, pickup, sort, trade)"
+                      value={agentForm.skills}
+                      onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
                       className={s.input}
-                      style={{ flex: 2 }}
+                      required
                     />
-                  </div>
+                    <input
+                      type="text"
+                      placeholder="Wallet Address (optional)"
+                      value={agentForm.walletAddress}
+                      onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
+                      className={s.input}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Default Cost Per Task (optional)"
+                      value={agentForm.costPerTask}
+                      onChange={(e) => setAgentForm({ ...agentForm, costPerTask: e.target.value })}
+                      className={s.input}
+                    />
+
+                    <div style={{
+                      borderTop: '1px solid var(--border-color)',
+                      paddingTop: '16px',
+                      marginTop: '8px',
+                    }}>
+                      <label style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: '12px' }}>
+                        💼 Add a Job Offering (optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Job Name (e.g., Pick and Sort Objects)"
+                        value={agentForm.jobOfferingName}
+                        onChange={(e) => setAgentForm({ ...agentForm, jobOfferingName: e.target.value })}
+                        className={s.input}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Job Description"
+                        value={agentForm.jobOfferingDescription}
+                        onChange={(e) => setAgentForm({ ...agentForm, jobOfferingDescription: e.target.value })}
+                        className={s.input}
+                      />
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <input
+                          type="number"
+                          placeholder="Price ($)"
+                          value={agentForm.jobOfferingPrice}
+                          onChange={(e) => setAgentForm({ ...agentForm, jobOfferingPrice: e.target.value })}
+                          className={s.input}
+                          style={{ flex: 1 }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Job Skills (comma-separated)"
+                          value={agentForm.jobOfferingSkills}
+                          onChange={(e) => setAgentForm({ ...agentForm, jobOfferingSkills: e.target.value })}
+                          className={s.input}
+                          style={{ flex: 2 }}
+                        />
+                      </div>
+                    </div>
+
+                    <button type="submit" className={s.button}>Connect Bot</button>
+                  </form>
                 </div>
 
-                <button type="submit" className={s.button}>Register Bot</button>
-              </form>
-            </div>
+                {agents.length > 0 && (
+                  <div className={s.onboardFormCard} style={{ marginTop: '0' }}>
+                    <h2 className={s.sectionTitle}>Or Reconnect an Existing Bot</h2>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                      Select a previously registered bot to provide new jobs.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {agents.map((agent) => (
+                        <button
+                          key={agent.id}
+                          className={s.button}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            justifyContent: 'flex-start',
+                            textAlign: 'left',
+                            padding: '10px 16px',
+                          }}
+                          onClick={() => {
+                            setConnectedBot({ id: agent.id, name: agent.name, skills: agent.skills });
+                            setBotJobForm(prev => ({ ...prev, requiredSkills: agent.skills.join(', ') }));
+                            setBotJobResult(null);
+                          }}
+                        >
+                          <div className={s.botAvatar} style={{ width: '28px', height: '28px', fontSize: '12px', flexShrink: 0 }}>
+                            {agent.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: '13px' }}>{agent.name}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {agent.skills.join(', ')}
+                            </div>
+                          </div>
+                          <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`} style={{ fontSize: '11px' }}>
+                            <span className={s.statusDot} />
+                            {agent.status}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             <div className={s.infoSection}>
-              <h3 className={s.sectionTitle}>What Happens Next?</h3>
+              <h3 className={s.sectionTitle}>How It Works</h3>
               <div className={s.infoGrid}>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>⬡</div>
-                  <div>Your bot appears in the marketplace for task creators to discover.</div>
+                  <div>Connect your bot and it appears in the marketplace for task creators to discover.</div>
                 </div>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>⚡</div>
-                  <div>Tasks matching your bot&apos;s skills are auto-assigned.</div>
+                  <div>Provide jobs from your bot, or let the network auto-assign tasks matching your skills.</div>
                 </div>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>◈</div>
