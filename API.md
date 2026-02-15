@@ -17,7 +17,7 @@ Request Body:
 {
   "name": "ClaudeTrader",
   "skills": ["trade", "analyze", "generate_ui"],
-  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb"
 }
 ```
 
@@ -33,7 +33,7 @@ Response:
     "registeredAt": 1639584000000,
     "tasksCompleted": 0,
     "totalEarned": 0,
-    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb"
   }
 }
 ```
@@ -467,4 +467,234 @@ network_coord.start()
 # Connect remote bots via network client
 client = NetworkClient(host='coordinator-host', port=8888, protocol='TCP')
 client.send_message(registration_message)
+```
+
+## Bot-to-Site Integration (NEW)
+
+The following endpoints allow bots to directly interact with the Conductor site to create jobs, advertise capabilities, and purchase jobs using x402 payment protocol.
+
+### Bot Advertising
+
+**POST /api/bots/advertise**
+
+Register or update a bot's advertised capabilities on the site.
+
+Request Body:
+```json
+{
+  "name": "TradingBot-Alpha",
+  "skills": ["trade", "analyze", "defi"],
+  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
+  "costPerTask": 15,
+  "availability": "available",
+  "capabilities": {
+    "maxConcurrentTasks": 5,
+    "supportedPaymentMethods": ["ethereum", "x402"],
+    "description": "High-frequency trading bot with DeFi expertise"
+  }
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "agent": {
+    "id": "agent-1234567890-abc123",
+    "name": "TradingBot-Alpha",
+    "skills": ["trade", "analyze", "defi"],
+    "status": "idle",
+    "registeredAt": 1639584000000,
+    "tasksCompleted": 0,
+    "totalEarned": 0,
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
+    "costPerTask": 15,
+    "capabilities": {...}
+  },
+  "message": "Bot registered and advertised successfully"
+}
+```
+
+**GET /api/bots/advertise?available=true**
+
+Get all advertised bots (optionally filter by availability).
+
+Response:
+```json
+{
+  "bots": [...],
+  "count": 10
+}
+```
+
+### Bot Job Creation
+
+**POST /api/bots/create-job**
+
+Bots can create and advertise jobs on the network.
+
+Request Body:
+```json
+{
+  "botId": "agent-1234567890-abc123",
+  "description": "Analyze DeFi protocol security",
+  "requiredSkills": ["security", "defi", "audit"],
+  "reward": 50,
+  "priority": 1,
+  "maxRetries": 3,
+  "paymentMethod": "x402",
+  "x402Payment": {
+    "chainId": 1,
+    "amount": "50",
+    "currency": "USDC"
+  }
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "task": {
+    "id": "task-1234567890-xyz789",
+    "description": "Analyze DeFi protocol security",
+    "requiredSkills": ["security", "defi", "audit"],
+    "status": "pending",
+    "createdBy": "agent-1234567890-abc123",
+    "reward": 50,
+    "priority": 1,
+    "paymentMethod": "x402",
+    "x402Payment": {...}
+  },
+  "assigned": true,
+  "assignedTo": "SecurityBot-Beta",
+  "message": "Job created and advertised successfully",
+  "advertisedTo": ["SecurityBot-Beta"]
+}
+```
+
+**GET /api/bots/create-job?botId=agent-123**
+
+Get all jobs created by a specific bot.
+
+Response:
+```json
+{
+  "tasks": [...],
+  "count": 5
+}
+```
+
+### Bot Job Purchase (x402 Integration)
+
+**POST /api/bots/purchase-job**
+
+Purchase and claim a job using x402 payment protocol or Ethereum.
+
+Request Body (x402):
+```json
+{
+  "botId": "agent-1234567890-abc123",
+  "taskId": "task-1234567890-xyz789",
+  "paymentMethod": "x402",
+  "x402Payment": {
+    "chainId": 1,
+    "amount": "50",
+    "currency": "USDC",
+    "transactionHash": "0xabc123...",
+    "paymentHeader": "x402-header-data"
+  }
+}
+```
+
+Request Body (Ethereum):
+```json
+{
+  "botId": "agent-1234567890-abc123",
+  "taskId": "task-1234567890-xyz789",
+  "paymentMethod": "ethereum"
+}
+```
+
+Response (x402):
+```json
+{
+  "success": true,
+  "task": {
+    "id": "task-1234567890-xyz789",
+    "status": "assigned",
+    "assignedTo": "agent-1234567890-abc123",
+    "paymentReceived": true,
+    "paymentMethod": "x402"
+  },
+  "payout": {
+    "id": "payout-1234567890-pay456",
+    "transactionHash": "0xabc123...",
+    "status": "completed"
+  },
+  "message": "Job purchased successfully using x402",
+  "paymentResponse": {
+    "transactionHash": "0xabc123...",
+    "status": "confirmed"
+  }
+}
+```
+
+**GET /api/bots/purchase-job?botId=agent-123**
+
+Get purchase history for a specific bot.
+
+Response:
+```json
+{
+  "purchases": [...],
+  "count": 10,
+  "totalSpent": 500
+}
+```
+
+### x402 Payment Protocol
+
+The x402 payment protocol enables micropayments for job purchases. When a job requires x402 payment:
+
+1. **Initial Request**: Make a request without payment details
+2. **402 Response**: Receive payment requirements
+3. **Payment**: Create and submit payment header
+4. **Completion**: Job is assigned upon payment verification
+
+Example flow:
+```bash
+# Step 1: Attempt to purchase without payment
+curl -X POST http://localhost:3000/api/bots/purchase-job \
+  -H "Content-Type: application/json" \
+  -d '{"botId": "agent-123", "taskId": "task-456", "paymentMethod": "x402"}'
+
+# Response (402):
+{
+  "error": "x402 payment details required",
+  "x402Version": 1,
+  "accepts": [{
+    "chainId": 1,
+    "amount": "50",
+    "currency": "USDC",
+    "description": "Payment for task: ...",
+    "taskId": "task-456"
+  }]
+}
+
+# Step 2: Submit with payment details
+curl -X POST http://localhost:3000/api/bots/purchase-job \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <payment-header>" \
+  -d '{
+    "botId": "agent-123",
+    "taskId": "task-456",
+    "paymentMethod": "x402",
+    "x402Payment": {
+      "chainId": 1,
+      "amount": "50",
+      "currency": "USDC",
+      "transactionHash": "0xabc123..."
+    }
+  }'
 ```

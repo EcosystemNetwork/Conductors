@@ -230,13 +230,12 @@ export default function SwarmPlanner() {
   return (
     <>
       <Head>
-        <title>Swarm Task Planner - Claw Agent Network</title>
-        <meta name="description" content="Plan and manage swarm tasks" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <title>Swarm Planner - Conductor Agent Network</title>
+        <meta name="description" content="Visual planner for AI agent task flows and cost estimation" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </Head>
 
