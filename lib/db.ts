@@ -2,7 +2,7 @@ import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 
 let _sql: NeonQueryFunction<false, false> | null = null;
 
-function getSql() {
+function getSql(): NeonQueryFunction<false, false> {
   if (!_sql) {
     const DATABASE_URL = process.env.DATABASE_URL;
     if (!DATABASE_URL) {
@@ -13,16 +13,10 @@ function getSql() {
   return _sql;
 }
 
-export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
-  apply(_target, _thisArg, args) {
-    return (getSql() as any)(...args);
-  },
-  get(_target, prop) {
-    const realSql = getSql();
-    const val = (realSql as any)[prop];
-    return typeof val === 'function' ? val.bind(realSql) : val;
-  }
-});
+// Tagged template function that lazily initializes the neon client
+export function sql(strings: TemplateStringsArray, ...values: any[]) {
+  return getSql()(strings, ...values);
+}
 
 let initialized = false;
 
