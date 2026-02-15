@@ -259,6 +259,9 @@ export default function Home() {
     priority: '3',
   });
   const [botJobResult, setBotJobResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [skillMdParsing, setSkillMdParsing] = useState(false);
+  const [skillMdError, setSkillMdError] = useState<string | null>(null);
+  const [skillMdPasteContent, setSkillMdPasteContent] = useState('');
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -408,6 +411,39 @@ export default function Home() {
     } catch (error) {
       console.error('Error creating bot job:', error);
       setBotJobResult({ success: false, message: 'Network error creating job' });
+    }
+  };
+
+  const handleSkillMdFile = async (content: string) => {
+    setSkillMdParsing(true);
+    setSkillMdError(null);
+    try {
+      const response = await fetch('/api/bots/parse-skill-md', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const result = await response.json();
+      if (response.ok && result.config) {
+        const c = result.config;
+        setAgentForm({
+          name: c.name || '',
+          skills: (c.skills || []).join(', '),
+          walletAddress: c.walletAddress || '',
+          costPerTask: c.costPerTask ? String(c.costPerTask) : '',
+          jobOfferingName: c.jobOfferings?.[0]?.name || '',
+          jobOfferingDescription: c.jobOfferings?.[0]?.description || '',
+          jobOfferingPrice: c.jobOfferings?.[0]?.price ? String(c.jobOfferings[0].price) : '',
+          jobOfferingSkills: c.jobOfferings?.[0]?.skills?.join(', ') || '',
+        });
+      } else {
+        setSkillMdError(result.error || 'Failed to parse skill.md');
+      }
+    } catch (error) {
+      console.error('Error parsing skill.md:', error);
+      setSkillMdError('Network error parsing skill.md');
+    } finally {
+      setSkillMdParsing(false);
     }
   };
 
@@ -1139,6 +1175,101 @@ export default function Home() {
 
             {!connectedBot && (
               <>
+                <div className={s.onboardFormCard}>
+                  <h2 className={s.sectionTitle}>Connect via skill.md</h2>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                    Upload or paste your <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>skill.md</code> file to auto-fill your bot's configuration.
+                  </p>
+
+                  <div
+                    style={{
+                      border: '2px dashed var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '24px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all var(--transition)',
+                      marginBottom: '12px',
+                    }}
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                    onDragLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      const file = e.dataTransfer.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const text = ev.target?.result;
+                          if (typeof text === 'string') handleSkillMdFile(text);
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.md,.markdown,.txt';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            const text = ev.target?.result;
+                            if (typeof text === 'string') handleSkillMdFile(text);
+                          };
+                          reader.readAsText(file);
+                        }
+                      };
+                      input.click();
+                    }}
+                  >
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>📄</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      {skillMdParsing ? 'Parsing...' : 'Drop skill.md here or click to upload'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      Accepts .md, .markdown, or .txt files
+                    </div>
+                  </div>
+
+                  <details style={{ marginBottom: '4px' }}>
+                    <summary style={{ fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '8px' }}>
+                      Or paste skill.md content
+                    </summary>
+                    <textarea
+                      className={s.input}
+                      style={{ width: '100%', minHeight: '120px', resize: 'vertical', fontFamily: 'monospace', fontSize: '12px', boxSizing: 'border-box' }}
+                      placeholder={'# MyClawBot\n\n- **Skills:** claw, pickup, sort\n- **Cost Per Task:** $15\n- **Wallet Address:** 0x...'}
+                      value={skillMdPasteContent}
+                      onChange={(e) => setSkillMdPasteContent(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className={s.button}
+                      style={{ marginTop: '8px', width: '100%' }}
+                      disabled={!skillMdPasteContent.trim() || skillMdParsing}
+                      onClick={() => handleSkillMdFile(skillMdPasteContent.trim())}
+                    >
+                      {skillMdParsing ? 'Parsing...' : '📄 Parse skill.md'}
+                    </button>
+                  </details>
+
+                  {skillMdError && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '10px 14px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '13px',
+                      color: '#ef4444',
+                    }}>
+                      ✗ {skillMdError}
+                    </div>
+                  )}
+                </div>
+
                 <div className={s.onboardFormCard}>
                   <h2 className={s.sectionTitle}>Connect Your Bot</h2>
                   <form onSubmit={handleRegisterAgent} className={s.form}>

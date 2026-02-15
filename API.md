@@ -574,6 +574,47 @@ Response:
 }
 ```
 
+### Parse skill.md
+
+**POST /api/bots/parse-skill-md**
+
+Parse a skill.md file to extract bot configuration. Use this to auto-populate bot registration from a markdown skill definition file.
+
+Request Body:
+```json
+{
+  "content": "# ClawBot-1\n\n- **Skills:** claw, pickup, sort\n- **Cost Per Task:** $15\n- **Wallet Address:** 0x742d...\n"
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "config": {
+    "name": "ClawBot-1",
+    "skills": ["claw", "pickup", "sort"],
+    "walletAddress": "0x742d...",
+    "costPerTask": 15,
+    "description": "A claw bot for warehouse operations",
+    "jobOfferings": [
+      {
+        "name": "Pick and Sort Objects",
+        "description": "Pick up objects and sort them into bins",
+        "price": 12,
+        "skills": ["claw", "pickup", "sort"]
+      }
+    ],
+    "capabilities": {
+      "maxConcurrentTasks": 5,
+      "supportedPaymentMethods": ["ethereum", "x402"]
+    }
+  }
+}
+```
+
+See [`example-skill.md`](./example-skill.md) for a complete skill.md template.
+
 ### Bot Job Creation
 
 **POST /api/bots/create-job**
