@@ -52,6 +52,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
+  /* Improve text rendering on mobile */
+  text-rendering: optimizeLegibility;
+  /* Support for notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 a {
@@ -59,11 +65,31 @@ a {
   text-decoration: none;
 }
 
+/* Make content images responsive by default */
+img:not([class*="icon"]):not([class*="logo"]):not([width]):not([height]) {
+  max-width: 100%;
+  height: auto;
+}
+
 input,
 button,
 textarea,
 select {
   font-family: inherit;
+  /* Ensure minimum touch target size on mobile */
+  min-height: 44px;
+}
+
+/* Remove tap highlight on mobile */
+button, a {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Better active states for touch devices */
+@media (hover: none) {
+  button:active, a:active {
+    opacity: 0.8;
+  }
 }
 
 @keyframes fadeIn {

@@ -9,12 +9,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: 1rem;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
   position: relative;
   z-index: 10;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding: 1.5rem 2rem;
+    flex-wrap: nowrap;
+  }
 }
 
 .headerLeft {
@@ -38,6 +47,10 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: var(--transition);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .backButton:hover {
@@ -55,10 +68,16 @@
   vertical-align: middle;
 }
 .title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.5rem;
+  }
 }
 
 .costBadge {
@@ -108,8 +127,15 @@
 .plannerContainer {
   flex: 1;
   width: 100%;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 140px);
   position: relative;
+  min-height: 400px;
+}
+
+@media (min-width: 768px) {
+  .plannerContainer {
+    height: calc(100vh - 100px);
+  }
 }
 
 .reactFlow {
