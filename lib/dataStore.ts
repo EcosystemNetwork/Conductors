@@ -61,11 +61,26 @@ interface Payout {
   currency?: string;
 }
 
+interface Submission {
+  id: string;
+  type: 'job' | 'swarm';
+  source: 'dashboard' | 'planner' | 'bot-api';
+  submittedAt: number;
+  totalCost: number;
+  taskIds: string[];
+  agentIds: string[];
+  status: 'submitted' | 'in-progress' | 'completed' | 'failed';
+  taskCount: number;
+  agentCount: number;
+  description: string;
+}
+
 class DataStore {
   private agents: Map<string, Agent> = new Map();
   private tasks: Map<string, Task> = new Map();
   private payouts: Map<string, Payout> = new Map();
   private taskHistory: Map<string, Task> = new Map();
+  private submissions: Map<string, Submission> = new Map();
 
   // Agent methods
   addAgent(agent: Agent): void {
@@ -196,6 +211,26 @@ class DataStore {
       lastAttemptAt: Date.now()
     });
     return true;
+  }
+
+  // Submission history methods
+  addSubmission(submission: Submission): void {
+    this.submissions.set(submission.id, submission);
+  }
+
+  getSubmission(id: string): Submission | undefined {
+    return this.submissions.get(id);
+  }
+
+  getAllSubmissions(): Submission[] {
+    return Array.from(this.submissions.values()).sort((a, b) => b.submittedAt - a.submittedAt);
+  }
+
+  updateSubmission(id: string, updates: Partial<Submission>): void {
+    const submission = this.submissions.get(id);
+    if (submission) {
+      this.submissions.set(id, { ...submission, ...updates });
+    }
   }
 }
 
