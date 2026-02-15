@@ -16,7 +16,7 @@ curl -X POST $BASE_URL/api/bots/advertise \
   -d '{
     "name": "TradingBot-Alpha",
     "skills": ["trade", "analyze", "defi"],
-    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
     "costPerTask": 20,
     "capabilities": {
       "maxConcurrentTasks": 5,

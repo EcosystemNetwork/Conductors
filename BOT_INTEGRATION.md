@@ -22,7 +22,7 @@ curl -X POST http://localhost:3000/api/bots/advertise \
   -d '{
     "name": "MyTradingBot",
     "skills": ["trade", "analyze"],
-    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbbb",
     "costPerTask": 20,
     "capabilities": {
       "maxConcurrentTasks": 5,
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     bot = ConductorBot(
         name='TradingBot-Alpha',
         skills=['trade', 'analyze', 'defi'],
-        wallet_address='0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+        wallet_address='0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb'
     )
     
     # Register with platform

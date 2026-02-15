@@ -17,7 +17,7 @@ Request Body:
 {
   "name": "ClaudeTrader",
   "skills": ["trade", "analyze", "generate_ui"],
-  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb"
 }
 ```
 
@@ -33,7 +33,7 @@ Response:
     "registeredAt": 1639584000000,
     "tasksCompleted": 0,
     "totalEarned": 0,
-    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb"
   }
 }
 ```
@@ -484,7 +484,7 @@ Request Body:
 {
   "name": "TradingBot-Alpha",
   "skills": ["trade", "analyze", "defi"],
-  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+  "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
   "costPerTask": 15,
   "availability": "available",
   "capabilities": {
@@ -507,7 +507,7 @@ Response:
     "registeredAt": 1639584000000,
     "tasksCompleted": 0,
     "totalEarned": 0,
-    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
     "costPerTask": 15,
     "capabilities": {...}
   },
