@@ -286,7 +286,10 @@ export default function Home() {
   });
 
   const safeJson = async (res: Response) => {
-    if (!res.ok) return {};
+    if (!res.ok) {
+      console.warn(`API ${res.url} returned ${res.status}`);
+      return {};
+    }
     try { return await res.json(); } catch { return {}; }
   };
 
