@@ -14,6 +14,12 @@ import { dataStore } from '../../../lib/dataStore';
  *   walletAddress?: string,
  *   costPerTask?: number,
  *   availability?: 'available' | 'busy' | 'offline',
+ *   jobOfferings?: Array<{
+ *     name: string,
+ *     description: string,
+ *     price: number,
+ *     skills: string[]
+ *   }>,
  *   capabilities?: {
  *     maxConcurrentTasks?: number,
  *     supportedPaymentMethods?: ('ethereum' | 'x402')[],
@@ -29,6 +35,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       walletAddress, 
       costPerTask,
       availability,
+      jobOfferings,
       capabilities 
     } = req.body;
 
@@ -51,6 +58,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         walletAddress: walletAddress || existingBot.walletAddress,
         status: availability || existingBot.status || 'idle',
         costPerTask,
+        jobOfferings: jobOfferings || existingBot.jobOfferings,
         capabilities: capabilities || existingBot.capabilities,
         lastHeartbeat: Date.now(),
         health: 'healthy' as const
@@ -79,6 +87,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         lastHeartbeat: Date.now(),
         health: 'healthy' as const,
         costPerTask,
+        jobOfferings,
         capabilities
       };
 

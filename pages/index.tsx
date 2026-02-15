@@ -22,6 +22,13 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import s from '../styles/Home.module.css';
 
+interface JobOffering {
+  name: string;
+  description: string;
+  price: number;
+  skills: string[];
+}
+
 interface Agent {
   id: string;
   name: string;
@@ -33,6 +40,17 @@ interface Agent {
   walletAddress?: string;
   lastHeartbeat?: number;
   health?: 'healthy' | 'degraded' | 'unhealthy';
+  costPerTask?: number;
+  jobOfferings?: JobOffering[];
+}
+
+interface BotListing {
+  botId: string;
+  botName: string;
+  botStatus: string;
+  skills: string[];
+  walletAddress?: string;
+  offering: JobOffering;
 }
 
 interface Task {
@@ -91,9 +109,9 @@ const initialNodes: Node<NodeData>[] = [
     type: 'agentNode',
     position: { x: 100, y: 250 },
     data: { 
-      label: 'UI Generator',
-      skills: ['generate_ui', 'design'],
-      costPerTask: 15
+      label: 'Claw Bot',
+      skills: ['claw', 'pickup', 'sort'],
+      costPerTask: 12
     },
   },
   {
@@ -187,6 +205,17 @@ const nodeTypes = {
   taskNode: TaskNode,
 };
 
+const emptyAgentForm = {
+  name: '',
+  skills: '',
+  walletAddress: '',
+  costPerTask: '',
+  jobOfferingName: '',
+  jobOfferingDescription: '',
+  jobOfferingPrice: '',
+  jobOfferingSkills: ''
+};
+
 export default function Home() {
   const router = useRouter();
   const account = useActiveAccount();
@@ -195,14 +224,11 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
+  const [botListings, setBotListings] = useState<BotListing[]>([]);
   const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
 
-  const [agentForm, setAgentForm] = useState({
-    name: '',
-    skills: '',
-    walletAddress: ''
-  });
+  const [agentForm, setAgentForm] = useState(emptyAgentForm);
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -231,22 +257,25 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [agentsRes, tasksRes, payoutsRes, historyRes] = await Promise.all([
+      const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes] = await Promise.all([
         fetch('/api/agents/register'),
         fetch('/api/tasks'),
         fetch('/api/payouts'),
-        fetch('/api/tasks/history')
+        fetch('/api/tasks/history'),
+        fetch('/api/bots/listings')
       ]);
 
       const agentsData = await agentsRes.json();
       const tasksData = await tasksRes.json();
       const payoutsData = await payoutsRes.json();
       const historyData = await historyRes.json();
+      const listingsData = await listingsRes.json();
 
       setAgents(agentsData.agents || []);
       setTasks(tasksData.tasks || []);
       setPayouts(payoutsData.payouts || []);
       setTaskHistory(historyData.history || []);
+      setBotListings(listingsData.listings || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -261,18 +290,34 @@ export default function Home() {
   const handleRegisterAgent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/agents/register', {
+      const skills = agentForm.skills.split(',').map(s => s.trim());
+      const jobOfferings: JobOffering[] = [];
+      
+      if (agentForm.jobOfferingName && agentForm.jobOfferingPrice) {
+        jobOfferings.push({
+          name: agentForm.jobOfferingName,
+          description: agentForm.jobOfferingDescription || agentForm.jobOfferingName,
+          price: parseFloat(agentForm.jobOfferingPrice),
+          skills: agentForm.jobOfferingSkills
+            ? agentForm.jobOfferingSkills.split(',').map(s => s.trim())
+            : skills
+        });
+      }
+
+      const response = await fetch('/api/bots/advertise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: agentForm.name,
-          skills: agentForm.skills.split(',').map(s => s.trim()),
-          walletAddress: agentForm.walletAddress
+          skills,
+          walletAddress: agentForm.walletAddress || undefined,
+          costPerTask: agentForm.costPerTask ? parseFloat(agentForm.costPerTask) : undefined,
+          jobOfferings: jobOfferings.length > 0 ? jobOfferings : undefined
         })
       });
 
       if (response.ok) {
-        setAgentForm({ name: '', skills: '', walletAddress: '' });
+        setAgentForm(emptyAgentForm);
         fetchData();
       }
     } catch (error) {
@@ -516,6 +561,15 @@ export default function Home() {
     );
   }, [agents, skillFilter]);
 
+  const filteredListings = useMemo(() => {
+    if (!skillFilter) return botListings;
+    const lowerFilter = skillFilter.toLowerCase();
+    return botListings.filter(listing =>
+      listing.offering.skills.some(skill => skill.toLowerCase().includes(lowerFilter)) ||
+      listing.skills.some(skill => skill.toLowerCase().includes(lowerFilter))
+    );
+  }, [botListings, skillFilter]);
+
   const stats = {
     totalAgents: agents.length,
     idleAgents: agents.filter(a => a.status === 'idle').length,
@@ -720,6 +774,28 @@ export default function Home() {
                         <span key={idx} className={s.badge}>{skill}</span>
                       ))}
                     </div>
+                    {agent.costPerTask && (
+                      <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600, margin: '8px 0 4px' }}>
+                        💰 ${agent.costPerTask}/task
+                      </div>
+                    )}
+                    {agent.jobOfferings && agent.jobOfferings.length > 0 && (
+                      <div style={{ marginTop: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Jobs Offered</div>
+                        {agent.jobOfferings.map((offering, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '4px 0',
+                            fontSize: '12px',
+                          }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>{offering.name}</span>
+                            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>${offering.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className={s.botStats}>
                       <div className={s.botStatItem}>
                         <span className={s.statValue}>{agent.tasksCompleted}</span>
@@ -748,6 +824,66 @@ export default function Home() {
                 )}
               </div>
             )}
+
+            {/* Job Listings Section */}
+            <div style={{ marginTop: '32px' }}>
+              <h2 className={s.sectionTitle}>
+                Job Listings <span>({filteredListings.length})</span>
+              </h2>
+              <p className={s.tagline} style={{ marginBottom: '16px' }}>
+                Browse jobs that bots can do and their prices
+              </p>
+              {filteredListings.length > 0 ? (
+                <div className={s.tableContainer}>
+                  <div className={s.tableScroll}>
+                    <table className={s.table}>
+                      <thead>
+                        <tr>
+                          <th className={s.th}>Job</th>
+                          <th className={s.th}>Description</th>
+                          <th className={s.th}>Skills</th>
+                          <th className={s.th}>Price</th>
+                          <th className={s.th}>Bot</th>
+                          <th className={s.th}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredListings.map((listing, idx) => (
+                          <tr key={`${listing.botId}-${idx}`} className={s.tr}>
+                            <td className={s.td} style={{ fontWeight: 600 }}>{listing.offering.name}</td>
+                            <td className={s.td}>{listing.offering.description}</td>
+                            <td className={s.td}>
+                              {listing.offering.skills.map((skill, sidx) => (
+                                <span key={sidx} className={s.badge}>{skill}</span>
+                              ))}
+                            </td>
+                            <td className={s.td}>
+                              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '14px' }}>
+                                ${listing.offering.price}
+                              </span>
+                            </td>
+                            <td className={s.td}>{listing.botName}</td>
+                            <td className={s.td}>
+                              <span className={`${s.statusBadge} ${getStatusClass(listing.botStatus)}`}>
+                                <span className={s.statusDot} />
+                                {listing.botStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>💼</div>
+                  {botListings.length === 0
+                    ? 'No job listings yet. Bots can advertise their services via the API.'
+                    : 'No listings match your filter.'}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -789,7 +925,7 @@ export default function Home() {
               <form onSubmit={handleRegisterAgent} className={s.form}>
                 <input
                   type="text"
-                  placeholder="Bot Name (e.g., ClaudeTrader)"
+                  placeholder="Bot Name (e.g., ClawBot-1)"
                   value={agentForm.name}
                   onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                   className={s.input}
@@ -797,7 +933,7 @@ export default function Home() {
                 />
                 <input
                   type="text"
-                  placeholder="Skills (comma-separated: trade, analyze, generate_ui)"
+                  placeholder="Skills (comma-separated: claw, pickup, sort, trade)"
                   value={agentForm.skills}
                   onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
                   className={s.input}
@@ -810,6 +946,56 @@ export default function Home() {
                   onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
                   className={s.input}
                 />
+                <input
+                  type="number"
+                  placeholder="Default Cost Per Task (optional)"
+                  value={agentForm.costPerTask}
+                  onChange={(e) => setAgentForm({ ...agentForm, costPerTask: e.target.value })}
+                  className={s.input}
+                />
+
+                <div style={{
+                  borderTop: '1px solid var(--border-color)',
+                  paddingTop: '16px',
+                  marginTop: '8px',
+                }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: '12px' }}>
+                    💼 Add a Job Offering (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Job Name (e.g., Pick and Sort Objects)"
+                    value={agentForm.jobOfferingName}
+                    onChange={(e) => setAgentForm({ ...agentForm, jobOfferingName: e.target.value })}
+                    className={s.input}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Job Description"
+                    value={agentForm.jobOfferingDescription}
+                    onChange={(e) => setAgentForm({ ...agentForm, jobOfferingDescription: e.target.value })}
+                    className={s.input}
+                  />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="number"
+                      placeholder="Price ($)"
+                      value={agentForm.jobOfferingPrice}
+                      onChange={(e) => setAgentForm({ ...agentForm, jobOfferingPrice: e.target.value })}
+                      className={s.input}
+                      style={{ flex: 1 }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Job Skills (comma-separated)"
+                      value={agentForm.jobOfferingSkills}
+                      onChange={(e) => setAgentForm({ ...agentForm, jobOfferingSkills: e.target.value })}
+                      className={s.input}
+                      style={{ flex: 2 }}
+                    />
+                  </div>
+                </div>
+
                 <button type="submit" className={s.button}>Register Bot</button>
               </form>
             </div>
@@ -892,7 +1078,7 @@ export default function Home() {
                 <form onSubmit={handleRegisterAgent} className={s.form}>
                   <input
                     type="text"
-                    placeholder="Agent Name (e.g., ClaudeTrader)"
+                    placeholder="Agent Name (e.g., ClawBot-1)"
                     value={agentForm.name}
                     onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                     className={s.input}
@@ -900,7 +1086,7 @@ export default function Home() {
                   />
                   <input
                     type="text"
-                    placeholder="Skills (comma-separated: trade, analyze, generate_ui)"
+                    placeholder="Skills (comma-separated: claw, pickup, sort, trade)"
                     value={agentForm.skills}
                     onChange={(e) => setAgentForm({ ...agentForm, skills: e.target.value })}
                     className={s.input}

@@ -1,3 +1,10 @@
+interface JobOffering {
+  name: string;
+  description: string;
+  price: number;
+  skills: string[];
+}
+
 interface Agent {
   id: string;
   name: string;
@@ -10,6 +17,7 @@ interface Agent {
   lastHeartbeat?: number;
   health?: 'healthy' | 'degraded' | 'unhealthy';
   costPerTask?: number;
+  jobOfferings?: JobOffering[];
   capabilities?: {
     maxConcurrentTasks?: number;
     supportedPaymentMethods?: ('ethereum' | 'x402')[];
