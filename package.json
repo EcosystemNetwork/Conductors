@@ -9,6 +9,7 @@
     "export": "next export"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
     "@types/ws": "^8.18.1",
     "ethers": "^5.8.0",
     "next": "^15.0.8",
