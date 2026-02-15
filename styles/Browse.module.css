@@ -64,8 +64,8 @@
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #000;
-  background: #f97316;
+  color: #fff;
+  background: #9333ea;
   border: none;
   padding: 8px 20px;
   border-radius: 9999px;
@@ -77,8 +77,8 @@
 }
 
 .navCta:hover {
-  background: #fb923c;
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  background: #a855f7;
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
 }
 
 /* Hero section */
@@ -136,8 +136,8 @@
 }
 
 .filterInput:focus {
-  border-color: #f97316;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+  border-color: #00bfff;
+  box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.25);
 }
 
 .filterLabel {
@@ -171,8 +171,8 @@
 }
 
 .filterSelect:focus {
-  border-color: #f97316;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+  border-color: #00bfff;
+  box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.25);
 }
 
 /* Category pills */
@@ -199,14 +199,14 @@
 }
 
 .categoryPill:hover {
-  border-color: #f97316;
+  border-color: #a855f7;
   color: #fafafa;
 }
 
 .categoryPillActive {
-  background: #f97316;
-  border-color: #f97316;
-  color: #000;
+  background: #9333ea;
+  border-color: #9333ea;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -230,9 +230,11 @@
   .grid {
     grid-template-columns: 1fr;
   }
+
   .heroTitle {
     font-size: 2rem;
   }
+
   .filterBar {
     flex-direction: column;
   }
@@ -258,7 +260,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #f97316, transparent);
+  background: linear-gradient(90deg, transparent, #00bfff, #9333ea, #e040a0, transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -296,7 +298,7 @@
 }
 
 .avatarGradient1 {
-  background: linear-gradient(135deg, #f97316, #ea580c);
+  background: linear-gradient(135deg, #00bfff, #3366ff);
 }
 
 .avatarGradient2 {
@@ -304,7 +306,7 @@
 }
 
 .avatarGradient3 {
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  background: linear-gradient(135deg, #e040a0, #ff3366);
 }
 
 .avatarGradient4 {
@@ -312,7 +314,7 @@
 }
 
 .avatarGradient5 {
-  background: linear-gradient(135deg, #ec4899, #db2777);
+  background: linear-gradient(135deg, #ff6b00, #ffa500);
 }
 
 .nameRow {
@@ -368,7 +370,7 @@
 }
 
 .starIcon {
-  color: #f97316;
+  color: #ffa500;
 }
 
 .statusRow {
@@ -481,20 +483,20 @@
   font-size: 0.82rem;
   font-weight: 600;
   padding: 8px 20px;
-  background: #f97316;
-  color: #000;
+  background: #9333ea;
+  color: #fff;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .hireButton:hover {
-  background: #fb923c;
-  box-shadow: 0 0 16px rgba(249, 115, 22, 0.3);
+  background: #a855f7;
+  box-shadow: 0 0 16px rgba(147, 51, 234, 0.3);
 }
 
 .hireButton:active {
-  background: #ea580c;
+  background: #7e22ce;
 }
 
 /* Empty state */
@@ -528,8 +530,8 @@
   font-size: 0.85rem;
   font-weight: 600;
   padding: 12px 28px;
-  background: #f97316;
-  color: #000;
+  background: #9333ea;
+  color: #fff;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -539,8 +541,8 @@
 }
 
 .registerCta:hover {
-  background: #fb923c;
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  background: #a855f7;
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
 }
 
 /* Count badge */
@@ -568,13 +570,15 @@
   width: 32px;
   height: 32px;
   border: 3px solid #27272a;
-  border-top-color: #f97316;
+  border-top-color: #9333ea;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingText {
@@ -594,7 +598,7 @@
 }
 
 .footer a {
-  color: #f97316;
+  color: #a855f7;
   text-decoration: none;
 }
 
@@ -607,7 +611,7 @@
   .navbar {
     padding: 12px 16px;
   }
-  
+
   .navLinks {
     gap: 16px;
   }

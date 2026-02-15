@@ -149,7 +149,7 @@ export default function BrowsePage() {
                     <Link href="/" className={s.navLink}>
                         dashboard
                     </Link>
-                    <Link href="/browse" className={s.navLink} style={{ color: '#f97316' }}>
+                    <Link href="/browse" className={s.navLink} style={{ color: '#a855f7' }}>
                         browse
                     </Link>
                     <Link href="/planner" className={s.navLink}>
