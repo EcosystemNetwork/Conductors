@@ -1301,20 +1301,10 @@ export default function Home() {
                   />
                   <button 
                     onClick={addPlannerAgentNode}
+                    className={s.sidebarButton}
                     style={{
-                      width: '100%',
                       background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '10px',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      transition: 'transform 0.2s',
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     Add Agent Node
                   </button>
@@ -1408,20 +1398,10 @@ export default function Home() {
                   />
                   <button 
                     onClick={addPlannerTaskNode}
+                    className={s.sidebarButton}
                     style={{
-                      width: '100%',
                       background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '10px',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      transition: 'transform 0.2s',
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     Add Task Node
                   </button>
