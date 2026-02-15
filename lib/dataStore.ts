@@ -9,6 +9,12 @@ interface Agent {
   walletAddress?: string;
   lastHeartbeat?: number;
   health?: 'healthy' | 'degraded' | 'unhealthy';
+  costPerTask?: number;
+  capabilities?: {
+    maxConcurrentTasks?: number;
+    supportedPaymentMethods?: ('ethereum' | 'x402')[];
+    description?: string;
+  };
 }
 
 interface Task {
@@ -24,6 +30,14 @@ interface Task {
   retryCount?: number;
   maxRetries?: number;
   lastAttemptAt?: number;
+  createdBy?: string; // Bot ID that created this task
+  paymentMethod?: 'ethereum' | 'x402';
+  paymentReceived?: boolean;
+  x402Payment?: {
+    chainId: number;
+    amount: string;
+    currency: string;
+  };
 }
 
 interface Payout {
@@ -34,6 +48,9 @@ interface Payout {
   timestamp: number;
   status: 'pending' | 'completed';
   transactionHash?: string;
+  paymentMethod?: 'ethereum' | 'x402';
+  chainId?: number;
+  currency?: string;
 }
 
 class DataStore {
