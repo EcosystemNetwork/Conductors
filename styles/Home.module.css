@@ -105,11 +105,19 @@
   transition: all var(--transition);
   box-shadow: var(--shadow-glow);
   white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .plannerButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.plannerButton:active {
+  transform: translateY(0);
 }
 
 /* Navigation */
@@ -184,6 +192,10 @@
 .navButton:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.navButton:active {
+  transform: scale(0.98);
 }
 
 .navButtonActive {
@@ -599,6 +611,16 @@
   font-size: 0.9rem;
   transition: all var(--transition);
   outline: none;
+  /* iOS Safari specific fixes */
+  -webkit-appearance: none;
+  /* Prevent zoom on focus on iOS */
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .searchInput {
+    font-size: 0.9rem;
+  }
 }
 
 .searchInput::placeholder {
