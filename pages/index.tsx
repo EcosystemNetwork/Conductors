@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ConnectWallet, useAddress } from '@thirdweb-dev/react';
+import { ConnectButton, useActiveAccount } from 'thirdweb/react';
+import { client } from '../lib/thirdweb';
+import { ethereum } from 'thirdweb/chains';
 import ReactFlow, {
   Node,
   Edge,
@@ -181,7 +183,8 @@ const nodeTypes = {
 
 export default function Home() {
   const router = useRouter();
-  const address = useAddress();
+  const account = useActiveAccount();
+  const address = account?.address;
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
@@ -522,21 +525,27 @@ export default function Home() {
             <p className={s.tagline}>Discover &amp; Deploy AI Bots</p>
           </div>
           <div className={s.headerRight}>
-            <ConnectWallet 
+            <ConnectButton 
+              client={client}
+              chain={ethereum}
               theme="dark"
-              btnTitle="Connect Wallet"
-              modalTitle="Connect your wallet"
-              switchToActiveChain={true}
-              style={{
-                background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.625rem 1.25rem',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'all var(--transition)',
-                boxShadow: 'var(--shadow-glow)',
+              connectButton={{
+                label: "Connect Wallet",
+                style: {
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.625rem 1.25rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition)',
+                  boxShadow: 'var(--shadow-glow)',
+                }
+              }}
+              connectModal={{
+                title: "Connect your wallet",
+                size: "wide",
               }}
             />
           </div>
