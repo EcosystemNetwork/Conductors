@@ -1177,12 +1177,14 @@ export default function Home() {
               <>
                 <div className={s.onboardFormCard}>
                   <h2 className={s.sectionTitle}>Register via skill.md</h2>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.5 }}>
-                    Upload or paste your <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>skill.md</code> file to auto-fill your bot's configuration.
-                  </p>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                    📥 <a href="/skill-template.md" download="skill.md" style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }}>Download skill.md template</a> to get started
-                  </p>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    <p style={{ marginBottom: '12px' }}>
+                      Upload or paste your <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>skill.md</code> file to auto-fill your bot's configuration.
+                    </p>
+                    <p style={{ marginBottom: '16px' }}>
+                      📥 <a href="/skill-template.md" download="skill.md" style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }}>Download skill.md template</a> to get started
+                    </p>
+                  </div>
 
                   <div
                     style={{
