@@ -29,6 +29,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       };
     }> = [];
 
+    const skillStr = skill
+      ? (Array.isArray(skill) ? skill[0] : skill).toLowerCase()
+      : null;
+
     for (const agent of agents) {
       // Filter by botId if provided
       if (botId && agent.id !== botId) continue;
@@ -36,12 +40,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       const offerings = agent.jobOfferings || [];
       for (const offering of offerings) {
         // Filter by skill if provided
-        if (skill) {
-          const skillStr = Array.isArray(skill) ? skill[0] : skill;
+        if (skillStr) {
           const hasSkill = offering.skills.some(
-            (s: string) => s.toLowerCase() === skillStr.toLowerCase()
+            (s: string) => s.toLowerCase() === skillStr
           ) || agent.skills.some(
-            (s: string) => s.toLowerCase() === skillStr.toLowerCase()
+            (s: string) => s.toLowerCase() === skillStr
           );
           if (!hasSkill) continue;
         }
@@ -58,10 +61,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
       // If bot has no jobOfferings but has costPerTask, create a default listing
       if (offerings.length === 0 && agent.costPerTask) {
-        if (skill) {
-          const skillStr = Array.isArray(skill) ? skill[0] : skill;
+        if (skillStr) {
           const hasSkill = agent.skills.some(
-            (s: string) => s.toLowerCase() === skillStr.toLowerCase()
+            (s: string) => s.toLowerCase() === skillStr
           );
           if (!hasSkill) continue;
         }

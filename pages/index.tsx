@@ -205,6 +205,17 @@ const nodeTypes = {
   taskNode: TaskNode,
 };
 
+const emptyAgentForm = {
+  name: '',
+  skills: '',
+  walletAddress: '',
+  costPerTask: '',
+  jobOfferingName: '',
+  jobOfferingDescription: '',
+  jobOfferingPrice: '',
+  jobOfferingSkills: ''
+};
+
 export default function Home() {
   const router = useRouter();
   const account = useActiveAccount();
@@ -217,16 +228,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
 
-  const [agentForm, setAgentForm] = useState({
-    name: '',
-    skills: '',
-    walletAddress: '',
-    costPerTask: '',
-    jobOfferingName: '',
-    jobOfferingDescription: '',
-    jobOfferingPrice: '',
-    jobOfferingSkills: ''
-  });
+  const [agentForm, setAgentForm] = useState(emptyAgentForm);
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -315,7 +317,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        setAgentForm({ name: '', skills: '', walletAddress: '', costPerTask: '', jobOfferingName: '', jobOfferingDescription: '', jobOfferingPrice: '', jobOfferingSkills: '' });
+        setAgentForm(emptyAgentForm);
         fetchData();
       }
     } catch (error) {
