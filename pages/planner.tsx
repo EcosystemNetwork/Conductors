@@ -13,6 +13,8 @@ import ReactFlow, {
   MiniMap,
   Panel,
   MarkerType,
+  Handle,
+  Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import s from '../styles/Planner.module.css';
@@ -72,6 +74,7 @@ const initialEdges: Edge[] = [];
 const AgentNode = ({ data }: { data: AgentNodeData }) => {
   return (
     <div className={s.agentNode}>
+      <Handle type="target" position={Position.Left} className={s.handle} />
       <div className={s.nodeHeader}>
         <span className={s.nodeIcon}>🤖</span>
         <span className={s.nodeTitle}>{data.label}</span>
@@ -84,6 +87,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
         </div>
         <div className={s.nodeCost}>💰 ${data.costPerTask}/task</div>
       </div>
+      <Handle type="source" position={Position.Right} className={s.handle} />
     </div>
   );
 };
@@ -92,6 +96,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
 const TaskNode = ({ data }: { data: TaskNodeData }) => {
   return (
     <div className={s.taskNode}>
+      <Handle type="target" position={Position.Left} className={s.handle} />
       <div className={s.nodeHeader}>
         <span className={s.nodeIcon}>⚡</span>
         <span className={s.nodeTitle}>{data.label}</span>
@@ -105,6 +110,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
         </div>
         <div className={s.nodeCost}>Est. ${data.estimatedCost}</div>
       </div>
+      <Handle type="source" position={Position.Right} className={s.handle} />
     </div>
   );
 };
@@ -121,6 +127,8 @@ export default function SwarmPlanner() {
   const [nodeIdCounter, setNodeIdCounter] = useState(4);
   const [showAddAgent, setShowAddAgent] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Form states
   const [agentForm, setAgentForm] = useState({
@@ -135,19 +143,49 @@ export default function SwarmPlanner() {
     cost: '10'
   });
 
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find(n => n.id === connection.source);
+      const targetNode = nodes.find(n => n.id === connection.target);
+      if (!sourceNode || !targetNode) return false;
+      // Prevent duplicate edges
+      const exists = edges.some(
+        e => e.source === connection.source && e.target === connection.target
+      );
+      if (exists) return false;
+      // Prevent self-connections
+      if (connection.source === connection.target) return false;
+      return true;
+    },
+    [nodes, edges]
+  );
+
+  const getEdgeLabel = useCallback(
+    (source: string, target: string) => {
+      const sourceNode = nodes.find(n => n.id === source);
+      const targetNode = nodes.find(n => n.id === target);
+      if (sourceNode?.type === 'agentNode' && targetNode?.type === 'agentNode') return 'pipeline';
+      if (sourceNode?.type === 'agentNode' && targetNode?.type === 'taskNode') return 'assigns';
+      return '';
+    },
+    [nodes]
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
+      if (!params.source || !params.target) return;
       const newEdge = {
         ...params,
         type: 'smoothstep',
         animated: true,
+        label: getEdgeLabel(params.source, params.target),
         markerEnd: {
           type: MarkerType.ArrowClosed,
         },
       };
       setEdges((eds) => addEdge(newEdge, eds));
     },
-    [setEdges]
+    [setEdges, getEdgeLabel]
   );
 
   const addAgentNode = useCallback(() => {
@@ -211,19 +249,88 @@ export default function SwarmPlanner() {
     return edges.length;
   }, [edges]);
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (edges.length === 0) {
-      alert('Please connect at least one agent to a task before purchasing');
+      alert('Please connect at least one agent to a task before submitting');
       return;
     }
     
     const confirmed = window.confirm(
-      `You are about to purchase ${connectedTasks} task assignment(s) for a total of $${totalCost.toFixed(2)}. Continue?`
+      `You are about to submit ${connectedTasks} task assignment(s) for a total of $${totalCost.toFixed(2)}. Continue?`
     );
     
-    if (confirmed) {
-      alert(`Purchase successful! Your swarm tasks have been queued. Redirecting to dashboard...`);
-      router.push('/');
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    setSubmitResult(null);
+
+    try {
+      // Register all agent nodes via API
+      const agentNodes = nodes.filter(n => n.type === 'agentNode');
+      const agentResults = await Promise.all(
+        agentNodes.map(async (node) => {
+          const data = node.data as AgentNodeData;
+          const res = await fetch('/api/agents/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: data.label,
+              skills: data.skills,
+            }),
+          });
+          const result = await res.json();
+          return { nodeId: node.id, agent: result.agent, success: res.ok };
+        })
+      );
+
+      // Build a map from node ID to registered agent ID
+      const nodeToAgentId: Record<string, string> = {};
+      for (const r of agentResults) {
+        if (r.success && r.agent) {
+          nodeToAgentId[r.nodeId] = r.agent.id;
+        }
+      }
+
+      // Create all task nodes via API, assigned to connected agents
+      const taskNodes = nodes.filter(n => n.type === 'taskNode');
+      const taskResults = await Promise.all(
+        taskNodes.map(async (node) => {
+          const data = node.data as TaskNodeData;
+          const res = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              description: `${data.label}: ${data.description}`,
+              requiredSkills: data.requiredSkills,
+              reward: data.estimatedCost,
+            }),
+          });
+          return res.ok;
+        })
+      );
+
+      const allAgentsOk = agentResults.every(r => r.success);
+      const allTasksOk = taskResults.every(ok => ok);
+
+      if (allAgentsOk && allTasksOk) {
+        setSubmitResult({
+          success: true,
+          message: `Successfully submitted ${agentResults.length} agent(s) and ${taskResults.length} task(s). Redirecting to dashboard...`,
+        });
+        setTimeout(() => router.push('/'), 2000);
+      } else {
+        setSubmitResult({
+          success: false,
+          message: 'Some items failed to submit. Please check the dashboard and try again.',
+        });
+      }
+    } catch (error) {
+      setSubmitResult({
+        success: false,
+        message: 'Network error. Please check your connection and try again.',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -255,11 +362,24 @@ export default function SwarmPlanner() {
             <button 
               className={s.purchaseButton}
               onClick={handlePurchase}
-              disabled={edges.length === 0}
+              disabled={edges.length === 0 || submitting}
             >
-              Purchase ({connectedTasks} task{connectedTasks !== 1 ? 's' : ''})
+              {submitting ? 'Submitting...' : `Submit (${connectedTasks} task${connectedTasks !== 1 ? 's' : ''})`}
             </button>
           </div>
+          {submitResult && (
+            <div style={{
+              padding: '0.5rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              background: submitResult.success ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: submitResult.success ? '#22c55e' : '#ef4444',
+              border: `1px solid ${submitResult.success ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            }}>
+              {submitResult.message}
+            </div>
+          )}
         </header>
 
         <div className={s.plannerContainer}>
@@ -269,6 +389,7 @@ export default function SwarmPlanner() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            isValidConnection={isValidConnection}
             nodeTypes={nodeTypes}
             fitView
             className={s.reactFlow}

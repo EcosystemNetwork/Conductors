@@ -372,6 +372,13 @@
   border-radius: var(--radius-sm) !important;
 }
 
+.handle {
+  width: 10px;
+  height: 10px;
+  background: var(--accent) !important;
+  border: 2px solid white !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
