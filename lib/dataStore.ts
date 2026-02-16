@@ -63,6 +63,17 @@ interface Payout {
   currency?: string;
 }
 
+interface JobRequest {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  status: 'open' | 'closed';
+  createdAt: number;
+  createdBy: string;
+  bids: Array<{ agentId: string, amount: number, message: string, timestamp: number }>;
+}
+
 interface Submission {
   id: string;
   type: 'job' | 'swarm';
@@ -148,6 +159,20 @@ function rowToSubmission(row: any): Submission {
     taskCount: row.task_count,
     agentCount: row.agent_count,
     description: row.description || '',
+  };
+}
+
+// Helper to convert a database row to a JobRequest object
+function rowToJobRequest(row: any): JobRequest {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    budget: row.budget,
+    status: row.status,
+    createdAt: Number(row.created_at),
+    createdBy: row.created_by,
+    bids: row.bids || [],
   };
 }
 
@@ -413,6 +438,37 @@ class DataStore {
         agent_count = ${merged.agentCount},
         description = ${merged.description}
       WHERE id = ${id}
+    `;
+  }
+
+  // Job Request methods
+  async addJobRequest(request: JobRequest): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO job_requests (id, title, description, budget, status, created_at, created_by, bids)
+      VALUES (${request.id}, ${request.title}, ${request.description}, ${request.budget}, ${request.status}, ${request.createdAt}, ${request.createdBy}, ${JSON.stringify(request.bids)}::jsonb)
+    `;
+  }
+
+  async getAllJobRequests(): Promise<JobRequest[]> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM job_requests ORDER BY created_at DESC`;
+    return rows.map(rowToJobRequest);
+  }
+
+  async getJobRequest(id: string): Promise<JobRequest | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM job_requests WHERE id = ${id}`;
+    return rows.length > 0 ? rowToJobRequest(rows[0]) : undefined;
+  }
+
+  async addBidToRequest(requestId: string, bid: { agentId: string, amount: number, message: string, timestamp: number }): Promise<void> {
+    await this.ensureInitialized();
+    const request = await this.getJobRequest(requestId);
+    if (!request) return;
+    const newBids = [...request.bids, bid];
+    await sql`
+      UPDATE job_requests SET bids = ${JSON.stringify(newBids)}::jsonb WHERE id = ${requestId}
     `;
   }
 }

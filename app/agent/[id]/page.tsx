@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import s from '@/styles/Home.module.css';
 
 interface Agent {
@@ -270,7 +271,11 @@ export default function AgentDetailsPage() {
                             {(agent.jobOfferings || []).map((job, idx) => (
                                 <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                        <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>{job.name}</span>
+                                        <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>
+                                            <Link href={`/jobs/${agent.id}/${idx}`} style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer', borderBottom: '1px dotted var(--text-secondary)' }}>
+                                                {job.name} ↗
+                                            </Link>
+                                        </span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <span style={{ color: 'var(--accent-light)', fontWeight: '700' }}>${job.price}</span>
                                             <button
