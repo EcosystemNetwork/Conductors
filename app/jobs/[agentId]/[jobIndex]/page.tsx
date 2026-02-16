@@ -50,7 +50,12 @@ export default function JobDetailsPage() {
                     const agentData = data.agent;
                     setAgent(agentData);
 
-                    const idx = parseInt(Array.isArray(jobIndex) ? jobIndex[0] : jobIndex);
+                    const jobIndexStr = Array.isArray(jobIndex) ? jobIndex[0] : jobIndex;
+                    if (!jobIndexStr) {
+                        setError('Invalid job index');
+                        return;
+                    }
+                    const idx = parseInt(jobIndexStr);
                     if (agentData.jobOfferings && agentData.jobOfferings[idx]) {
                         setJob(agentData.jobOfferings[idx]);
                     } else {
