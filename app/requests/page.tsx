@@ -46,6 +46,7 @@ const tabs = [
     { key: 'history', label: 'History', icon: '📋' },
     { key: 'payouts', label: 'Payouts', icon: '◈' },
     { key: 'onboard', label: 'Bot Control', icon: '⬡' },
+    { key: 'developer', label: 'Developer', icon: '🔧' },
 ];
 
 type BoardView = 'offered' | 'requested';
@@ -335,6 +336,10 @@ export default function JobRequestsPage() {
                             className={`${s.navButton} ${tab.key === 'requests' ? s.navButtonActive : ''}`}
                             onClick={() => {
                                 if (tab.key === 'requests') return;
+                                if (tab.key === 'developer') {
+                                    router.push('/developer');
+                                    return;
+                                }
                                 router.push('/');
                             }}
                         >

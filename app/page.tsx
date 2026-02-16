@@ -259,6 +259,13 @@ export default function Home() {
   const [skillMdParsing, setSkillMdParsing] = useState(false);
   const [skillMdError, setSkillMdError] = useState<string | null>(null);
   const [skillMdPasteContent, setSkillMdPasteContent] = useState('');
+
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState<Array<{ id: string; name: string; owner_wallet?: string; created_at: number; last_used_at?: number; is_active: boolean }>>([]);
+  const [apiKeyName, setApiKeyName] = useState('');
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
+
   const [taskForm, setTaskForm] = useState({
     description: '',
     requiredSkills: '',
@@ -296,13 +303,14 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes, submissionsRes] = await Promise.all([
+      const [agentsRes, tasksRes, payoutsRes, historyRes, listingsRes, submissionsRes, keysRes] = await Promise.all([
         fetch('/api/agents/register'),
         fetch('/api/tasks'),
         fetch('/api/payouts'),
         fetch('/api/tasks/history'),
         fetch('/api/bots/listings'),
-        fetch('/api/tasks/submissions')
+        fetch('/api/tasks/submissions'),
+        fetch('/api/v1/keys')
       ]);
 
       const agentsData = await safeJson(agentsRes);
@@ -311,6 +319,7 @@ export default function Home() {
       const historyData = await safeJson(historyRes);
       const listingsData = await safeJson(listingsRes);
       const submissionsData = await safeJson(submissionsRes);
+      const keysData = await safeJson(keysRes);
 
       setAgents(agentsData.agents || []);
       setTasks(tasksData.tasks || []);
@@ -318,6 +327,7 @@ export default function Home() {
       setTaskHistory(historyData.history || []);
       setBotListings(listingsData.listings || []);
       setSubmissions(submissionsData.submissions || []);
+      setApiKeys(keysData.keys || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -813,6 +823,7 @@ export default function Home() {
     { key: 'history', label: 'History', icon: '📋' },
     { key: 'payouts', label: 'Payouts', icon: '◈' },
     { key: 'onboard', label: 'Bot Control', icon: '⬡' },
+    { key: 'developer', label: 'Developer', icon: '🔧' },
   ];
 
   const getStatusClass = (status: string) => {
@@ -936,6 +947,8 @@ export default function Home() {
               onClick={() => {
                 if (tab.key === 'requests') {
                   router.push('/requests');
+                } else if (tab.key === 'developer') {
+                  router.push('/developer');
                 } else {
                   setActiveTab(tab.key);
                 }
@@ -1495,6 +1508,136 @@ export default function Home() {
                 )}
               </>
             )}
+
+            {/* API Keys Management */}
+            <div className={s.onboardFormCard} style={{ marginTop: '0' }}>
+              <h2 className={s.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔑 API Keys
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                Generate API keys to let your agents post jobs programmatically via <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>POST /api/v1/jobs</code>
+              </p>
+
+              {/* Generate new key */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Key name (e.g. My Agent)"
+                  value={apiKeyName}
+                  onChange={(e) => setApiKeyName(e.target.value)}
+                  className={s.input}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  className={s.button}
+                  disabled={apiKeyLoading || !apiKeyName.trim()}
+                  onClick={async () => {
+                    setApiKeyLoading(true);
+                    setNewlyCreatedKey(null);
+                    try {
+                      const res = await fetch('/api/v1/keys', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: apiKeyName.trim() }),
+                      });
+                      const data = await res.json();
+                      if (data.key) {
+                        setNewlyCreatedKey(data.key);
+                        setApiKeyName('');
+                        fetchData();
+                      }
+                    } catch (err) {
+                      console.error('Error creating API key:', err);
+                    } finally {
+                      setApiKeyLoading(false);
+                    }
+                  }}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {apiKeyLoading ? 'Creating...' : 'Generate Key'}
+                </button>
+              </div>
+
+              {/* Show newly created key */}
+              {newlyCreatedKey && (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '12px 16px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 600, marginBottom: '6px' }}>⚠️ Save this key now — it won't be shown again</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <code style={{
+                      flex: 1,
+                      background: 'rgba(0,0,0,0.3)',
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      color: '#10b981',
+                      fontFamily: 'monospace',
+                      wordBreak: 'break-all',
+                    }}>
+                      {newlyCreatedKey}
+                    </code>
+                    <button
+                      className={s.smallButton}
+                      onClick={() => {
+                        navigator.clipboard.writeText(newlyCreatedKey);
+                      }}
+                      style={{ fontSize: '11px', padding: '6px 12px', whiteSpace: 'nowrap' }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* List existing keys */}
+              {apiKeys.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {apiKeys.map((k) => (
+                    <div key={k.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px 12px',
+                      background: 'var(--bg-glass)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      opacity: k.is_active ? 1 : 0.5,
+                    }}>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', flex: 1 }}>
+                        {k.name}
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        {k.id}
+                      </span>
+                      {k.last_used_at && (
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          Used {new Date(k.last_used_at).toLocaleDateString()}
+                        </span>
+                      )}
+                      {k.is_active ? (
+                        <button
+                          className={s.smallButton}
+                          style={{ fontSize: '10px', padding: '3px 8px', color: 'var(--error)' }}
+                          onClick={async () => {
+                            await fetch(`/api/v1/keys/${k.id}`, { method: 'DELETE' });
+                            fetchData();
+                          }}
+                        >
+                          Revoke
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '10px', color: 'var(--error)' }}>Revoked</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className={s.infoSection}>
               <h3 className={s.sectionTitle}>Ways to Connect</h3>

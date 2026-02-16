@@ -131,6 +131,19 @@ export async function initializeDatabase() {
       )
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id TEXT PRIMARY KEY,
+        key_hash TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        owner_wallet TEXT,
+        created_at BIGINT NOT NULL,
+        last_used_at BIGINT,
+        is_active BOOLEAN DEFAULT true,
+        permissions TEXT[] DEFAULT '{jobs.create,jobs.read}'
+      )
+    `;
+
     initialized = true;
     console.log('[DB] Database tables initialized successfully');
   } catch (error) {

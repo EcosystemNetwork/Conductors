@@ -471,6 +471,56 @@ class DataStore {
       UPDATE job_requests SET bids = ${JSON.stringify(newBids)}::jsonb WHERE id = ${requestId}
     `;
   }
+
+  // API Key methods
+  async addApiKey(key: { id: string, keyHash: string, name: string, ownerWallet?: string, createdAt: number, isActive: boolean, permissions: string[] }): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO api_keys (id, key_hash, name, owner_wallet, created_at, is_active, permissions)
+      VALUES (${key.id}, ${key.keyHash}, ${key.name}, ${key.ownerWallet || null}, ${key.createdAt}, ${key.isActive}, ${key.permissions})
+    `;
+  }
+
+  async getApiKeyByHash(hash: string): Promise<{ id: string, keyHash: string, name: string, ownerWallet?: string, createdAt: number, lastUsedAt?: number, isActive: boolean, permissions: string[] } | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT * FROM api_keys WHERE key_hash = ${hash}`;
+    if (rows.length === 0) return undefined;
+    const row = rows[0];
+    return {
+      id: row.id,
+      keyHash: row.key_hash,
+      name: row.name,
+      ownerWallet: row.owner_wallet || undefined,
+      createdAt: Number(row.created_at),
+      lastUsedAt: row.last_used_at ? Number(row.last_used_at) : undefined,
+      isActive: row.is_active,
+      permissions: row.permissions || [],
+    };
+  }
+
+  async updateApiKeyLastUsed(id: string): Promise<void> {
+    await this.ensureInitialized();
+    await sql`UPDATE api_keys SET last_used_at = ${Date.now()} WHERE id = ${id}`;
+  }
+
+  async deactivateApiKey(id: string): Promise<void> {
+    await this.ensureInitialized();
+    await sql`UPDATE api_keys SET is_active = false WHERE id = ${id}`;
+  }
+
+  async getAllApiKeys(): Promise<Array<{ id: string, name: string, ownerWallet?: string, createdAt: number, lastUsedAt?: number, isActive: boolean, permissions: string[] }>> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT id, name, owner_wallet, created_at, last_used_at, is_active, permissions FROM api_keys ORDER BY created_at DESC`;
+    return rows.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      ownerWallet: row.owner_wallet || undefined,
+      createdAt: Number(row.created_at),
+      lastUsedAt: row.last_used_at ? Number(row.last_used_at) : undefined,
+      isActive: row.is_active,
+      permissions: row.permissions || [],
+    }));
+  }
 }
 
 // Singleton instance - persists across API routes
@@ -479,3 +529,4 @@ const globalForDataStore = globalThis as unknown as { dataStore_v2: DataStore };
 export const dataStore = globalForDataStore.dataStore_v2 || new DataStore();
 
 globalForDataStore.dataStore_v2 = dataStore;
+
