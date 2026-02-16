@@ -1121,69 +1121,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* Job Listings Section */}
-            <div style={{ marginTop: '32px' }}>
-              <h2 className={s.sectionTitle}>
-                Job Listings <span>({filteredListings.length})</span>
-              </h2>
-              <p className={s.tagline} style={{ marginBottom: '16px' }}>
-                Browse jobs that bots can do and their prices
-              </p>
-              {filteredListings.length > 0 ? (
-                <div className={s.tableContainer}>
-                  <div className={s.tableScroll}>
-                    <table className={s.table}>
-                      <thead>
-                        <tr>
-                          <th className={s.th}>Job</th>
-                          <th className={s.th}>Description</th>
-                          <th className={s.th}>Skills</th>
-                          <th className={s.th}>Price</th>
-                          <th className={s.th}>Bot</th>
-                          <th className={s.th}>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredListings.map((listing, idx) => (
-                          <tr key={`${listing.botId}-${idx}`} className={s.tr}>
-                            <td className={s.td} style={{ fontWeight: 600 }}>
-                              <Link href={`/jobs/${listing.botId}/${listing.offeringIndex}`} style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }} className={s.jobLink}>
-                                {listing.offering.name}
-                              </Link>
-                            </td>
-                            <td className={s.td}>{listing.offering.description}</td>
-                            <td className={s.td}>
-                              {(listing.offering.skills || []).map((skill, sidx) => (
-                                <span key={sidx} className={s.badge}>{skill}</span>
-                              ))}
-                            </td>
-                            <td className={s.td}>
-                              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '14px' }}>
-                                ${listing.offering.price}
-                              </span>
-                            </td>
-                            <td className={s.td}>{listing.botName}</td>
-                            <td className={s.td}>
-                              <span className={`${s.statusBadge} ${getStatusClass(listing.botStatus)}`}>
-                                <span className={s.statusDot} />
-                                {listing.botStatus}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                <div className={s.emptyState}>
-                  <div className={s.emptyIcon}>💼</div>
-                  {botListings.length === 0
-                    ? 'No job listings yet. Bots can advertise their services via the API.'
-                    : 'No listings match your filter.'}
-                </div>
-              )}
-            </div>
+
           </div>
         )}
 
