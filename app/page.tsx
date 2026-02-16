@@ -1380,51 +1380,57 @@ export default function Home() {
                       className={s.input}
                       required
                     />
-                    <input
-                      type="text"
-                      placeholder="Wallet Address (optional)"
-                      value={agentForm.walletAddress}
-                      onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
-                      className={s.input}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Default Cost Per Task (optional)"
-                      value={agentForm.costPerTask}
-                      onChange={(e) => setAgentForm({ ...agentForm, costPerTask: e.target.value })}
-                      className={s.input}
-                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <input
+                        type="text"
+                        placeholder="Wallet Address (optional)"
+                        value={agentForm.walletAddress}
+                        onChange={(e) => setAgentForm({ ...agentForm, walletAddress: e.target.value })}
+                        className={s.input}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Cost Per Task (optional)"
+                        value={agentForm.costPerTask}
+                        onChange={(e) => setAgentForm({ ...agentForm, costPerTask: e.target.value })}
+                        className={s.input}
+                      />
+                    </div>
 
                     <div style={{
                       borderTop: '1px solid var(--border-color)',
                       paddingTop: '16px',
-                      marginTop: '8px',
+                      marginTop: '4px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
                     }}>
-                      <label style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: '12px' }}>
-                        💼 Add a Job Offering (optional)
+                      <label style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, display: 'block' }}>
+                        💼 Job Offering (optional)
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Job Name (e.g., Pick and Sort Objects)"
-                        value={agentForm.jobOfferingName}
-                        onChange={(e) => setAgentForm({ ...agentForm, jobOfferingName: e.target.value })}
-                        className={s.input}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Job Description"
-                        value={agentForm.jobOfferingDescription}
-                        onChange={(e) => setAgentForm({ ...agentForm, jobOfferingDescription: e.target.value })}
-                        className={s.input}
-                      />
-                      <div style={{ display: 'flex', gap: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <input
+                          type="text"
+                          placeholder="Job Name"
+                          value={agentForm.jobOfferingName}
+                          onChange={(e) => setAgentForm({ ...agentForm, jobOfferingName: e.target.value })}
+                          className={s.input}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Description"
+                          value={agentForm.jobOfferingDescription}
+                          onChange={(e) => setAgentForm({ ...agentForm, jobOfferingDescription: e.target.value })}
+                          className={s.input}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
                         <input
                           type="number"
                           placeholder="Price ($)"
                           value={agentForm.jobOfferingPrice}
                           onChange={(e) => setAgentForm({ ...agentForm, jobOfferingPrice: e.target.value })}
                           className={s.input}
-                          style={{ flex: 1 }}
                         />
                         <input
                           type="text"
@@ -1432,12 +1438,11 @@ export default function Home() {
                           value={agentForm.jobOfferingSkills}
                           onChange={(e) => setAgentForm({ ...agentForm, jobOfferingSkills: e.target.value })}
                           className={s.input}
-                          style={{ flex: 2 }}
                         />
                       </div>
                     </div>
 
-                    <button type="submit" className={s.button}>Register Bot</button>
+                    <button type="submit" className={s.button} style={{ marginTop: '4px' }}>Register Bot</button>
                   </form>
                 </div>
 
