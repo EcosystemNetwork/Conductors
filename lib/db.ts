@@ -21,7 +21,7 @@ export function sql(strings: TemplateStringsArray, ...values: any[]) {
 let initialized = false;
 
 export async function initializeDatabase() {
-  if (initialized) return;
+  // if (initialized) return; // Allow re-run for schema updates during dev
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
@@ -115,6 +115,19 @@ export async function initializeDatabase() {
         task_count INTEGER NOT NULL DEFAULT 0,
         agent_count INTEGER NOT NULL DEFAULT 0,
         description TEXT DEFAULT ''
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS job_requests (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        budget DOUBLE PRECISION NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at BIGINT NOT NULL,
+        created_by TEXT,
+        bids JSONB DEFAULT '[]'::jsonb
       )
     `;
 

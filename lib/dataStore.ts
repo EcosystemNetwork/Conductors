@@ -474,8 +474,8 @@ class DataStore {
 }
 
 // Singleton instance - persists across API routes
-const globalForDataStore = globalThis as unknown as { dataStore: DataStore };
+const globalForDataStore = globalThis as unknown as { dataStore_v2: DataStore };
 
-export const dataStore = globalForDataStore.dataStore || new DataStore();
+export const dataStore = globalForDataStore.dataStore_v2 || new DataStore();
 
-globalForDataStore.dataStore = dataStore;
+globalForDataStore.dataStore_v2 = dataStore;

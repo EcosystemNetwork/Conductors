@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
         await dataStore.addJobRequest(newRequest);
         return NextResponse.json({ request: newRequest });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating job request:', error);
-        return NextResponse.json({ error: 'Failed to create request' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to create request', details: error.message }, { status: 500 });
     }
 }

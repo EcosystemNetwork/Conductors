@@ -803,13 +803,14 @@ export default function Home() {
   };
 
   const tabs = [
+    { key: 'dashboard', label: 'Dashboard', icon: '◎' },
     { key: 'marketplace', label: 'Marketplace', icon: '◉' },
     { key: 'planner', label: 'Swarm Planner', icon: '🎯' },
-    { key: 'onboard', label: 'Register Bot', icon: '⬡' },
-    { key: 'dashboard', label: 'Dashboard', icon: '◎' },
+    { key: 'requests', label: 'Job Board', icon: '📢' },
     { key: 'tasks', label: 'Tasks', icon: '⚡' },
     { key: 'history', label: 'History', icon: '📋' },
     { key: 'payouts', label: 'Payouts', icon: '◈' },
+    { key: 'onboard', label: 'Bot Control', icon: '⬡' },
   ];
 
   const getStatusClass = (status: string) => {
@@ -930,7 +931,13 @@ export default function Home() {
             <button
               key={tab.key}
               className={`${s.navButton} ${activeTab === tab.key ? s.navButtonActive : ''}`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                if (tab.key === 'requests') {
+                  router.push('/requests');
+                } else {
+                  setActiveTab(tab.key);
+                }
+              }}
             >
               {tab.label}
             </button>
