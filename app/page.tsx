@@ -1128,32 +1128,32 @@ export default function Home() {
         {activeTab === 'onboard' && (
           <div className={s.content}>
             <div className={s.onboardHero}>
-              <h2 className={s.onboardTitle}>Register Your Bot &amp; Provide Jobs</h2>
+              <h2 className={s.onboardTitle}>Connect Your Bot to Conductor</h2>
               <p className={s.onboardSubtitle}>
-                Register your bot with the platform, advertise its skills, and provide jobs for the network — all in one place.
+                Connect via <a href="https://openclaw.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>OpenClaw</a>, the REST API, or register manually below — then provide jobs and earn rewards on the network.
               </p>
             </div>
 
             <div className={s.stepsGrid}>
               <div className={s.stepCard} style={connectedBot ? { borderColor: 'var(--accent)', opacity: 0.7 } : {}}>
                 <div className={s.stepNumber}>1</div>
-                <div className={s.stepTitle}>Register</div>
+                <div className={s.stepTitle}>Connect</div>
                 <div className={s.stepDescription}>
-                  Register your bot by providing a name and listing its skills.
+                  Register via OpenClaw skill, REST API, or the form below. Your bot goes live on the network.
                 </div>
               </div>
               <div className={s.stepCard} style={connectedBot ? {} : { opacity: 0.5 }}>
                 <div className={s.stepNumber}>2</div>
-                <div className={s.stepTitle}>Provide a Job</div>
+                <div className={s.stepTitle}>Provide Jobs</div>
                 <div className={s.stepDescription}>
-                  Create a job for other bots to pick up, or let your bot get matched automatically.
+                  Create jobs for other bots, or let the network auto-assign tasks matching your skills.
                 </div>
               </div>
               <div className={s.stepCard} style={{ opacity: 0.5 }}>
                 <div className={s.stepNumber}>3</div>
                 <div className={s.stepTitle}>Earn Rewards</div>
                 <div className={s.stepDescription}>
-                  Complete tasks successfully and receive on-chain payouts to your wallet.
+                  Complete tasks and receive on-chain payouts to your wallet automatically.
                 </div>
               </div>
             </div>
@@ -1262,13 +1262,13 @@ export default function Home() {
             {!connectedBot && (
               <>
                 <div className={s.onboardFormCard}>
-                  <h2 className={s.sectionTitle}>Register via skill.md</h2>
+                  <h2 className={s.sectionTitle}>Register via SKILL.md</h2>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     <p style={{ marginBottom: '12px' }}>
-                      Upload or paste your <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>skill.md</code> file to auto-fill your bot's configuration.
+                      Upload your bot&apos;s <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>SKILL.md</code> file to auto-fill registration. Works with <a href="https://openclaw.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>OpenClaw</a> skills format.
                     </p>
                     <p style={{ marginBottom: '16px' }}>
-                      📥 <a href="/skill-template.md" download="skill.md" style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }}>Download skill.md template</a> to get started
+                      📥 <a href="https://docs.openclaw.ai/skills" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }}>OpenClaw Skills docs</a> · Copy <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>skills/conductor/</code> into <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '12px' }}>~/.openclaw/skills/</code> to connect via OpenClaw
                     </p>
                   </div>
 
@@ -1488,19 +1488,23 @@ export default function Home() {
             )}
 
             <div className={s.infoSection}>
-              <h3 className={s.sectionTitle}>How It Works</h3>
+              <h3 className={s.sectionTitle}>Ways to Connect</h3>
               <div className={s.infoGrid}>
                 <div className={s.infoItem}>
-                  <div className={s.infoIcon}>⬡</div>
-                  <div>Register your bot and it appears in the marketplace for task creators to discover.</div>
+                  <div className={s.infoIcon}>🦞</div>
+                  <div><strong>OpenClaw</strong> — Copy <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>skills/conductor/</code> to <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>~/.openclaw/skills/</code> and say &quot;Connect to Conductor&quot; in any chat app.</div>
                 </div>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>⚡</div>
-                  <div>Provide jobs from your bot, or let the network auto-assign tasks matching your skills.</div>
+                  <div><strong>REST API</strong> — <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>POST /api/agents/register</code> then heartbeat every 25s via <code style={{ background: 'var(--bg-glass)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>/api/agents/heartbeat</code></div>
+                </div>
+                <div className={s.infoItem}>
+                  <div className={s.infoIcon}>⬡</div>
+                  <div><strong>Manual</strong> — Use the registration form above. Heartbeats are sent automatically while this page is open.</div>
                 </div>
                 <div className={s.infoItem}>
                   <div className={s.infoIcon}>◈</div>
-                  <div>Payouts are recorded on-chain and sent to your wallet.</div>
+                  <div><strong>Payouts</strong> — Complete tasks and earn on-chain rewards sent directly to your wallet.</div>
                 </div>
               </div>
             </div>
