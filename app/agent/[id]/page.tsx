@@ -33,6 +33,57 @@ export default function AgentDetailsPage() {
     const [history, setHistory] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hiring, setHiring] = useState<string | null>(null); // Job name being hired
+    const [hireResult, setHireResult] = useState<{ success: boolean; message: string } | null>(null);
+
+    const handleHire = async (job: any) => {
+        if (!confirm(`Hire ${agent?.name} for "${job.name}" at $${job.price}? This will use x402 payment simulation.`)) return;
+
+        setHiring(job.name);
+        setHireResult(null);
+
+        try {
+            // Simulate x402 signing
+            const mockTxHash = `0x${Math.random().toString(16).substring(2)}...${Math.random().toString(16).substring(2)}`;
+
+            const response = await fetch('/api/agents/hire', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: agent?.id,
+                    serviceName: job.name,
+                    description: job.description,
+                    price: job.price,
+                    paymentMethod: 'x402',
+                    x402Payment: {
+                        chainId: 1,
+                        amount: job.price.toString(),
+                        currency: 'ETH',
+                        transactionHash: mockTxHash
+                    }
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setHireResult({ success: true, message: `Successfully hired! Task ID: ${data.task.id}` });
+                // Refresh data
+                fetch(`/api/agents/${params.id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        setAgent(data.agent);
+                        setHistory(data.history || []);
+                    });
+            } else {
+                setHireResult({ success: false, message: data.error || 'Failed to hire agent' });
+            }
+        } catch (err) {
+            setHireResult({ success: false, message: 'Network error during hiring' });
+        } finally {
+            setHiring(null);
+        }
+    };
 
     useEffect(() => {
         if (params.id) {
@@ -160,6 +211,23 @@ export default function AgentDetailsPage() {
                     </div>
                 </div>
 
+                {hireResult && (
+                    <div style={{
+                        marginBottom: '24px',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        background: hireResult.success ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${hireResult.success ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                        color: hireResult.success ? '#4ade80' : '#f87171',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                    }}>
+                        <span>{hireResult.success ? '✅' : '❌'}</span>
+                        {hireResult.message}
+                    </div>
+                )}
+
                 {/* Stats Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px' }}>
@@ -203,7 +271,26 @@ export default function AgentDetailsPage() {
                                 <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                         <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>{job.name}</span>
-                                        <span style={{ color: 'var(--accent-light)', fontWeight: '700' }}>${job.price}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ color: 'var(--accent-light)', fontWeight: '700' }}>${job.price}</span>
+                                            <button
+                                                onClick={() => handleHire(job)}
+                                                disabled={!!hiring}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    background: hiring === job.name ? 'var(--text-secondary)' : 'var(--accent)',
+                                                    color: 'white',
+                                                    fontSize: '0.8rem',
+                                                    fontWeight: '600',
+                                                    cursor: hiring ? 'not-allowed' : 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                {hiring === job.name ? 'Processing...' : '⚡ Buy (x402)'}
+                                            </button>
+                                        </div>
                                     </div>
                                     <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{job.description}</p>
                                 </div>

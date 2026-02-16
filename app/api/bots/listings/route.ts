@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
             price: number;
             skills: string[];
         };
+        offeringIndex: number | string;
     }> = [];
 
     const skillStr = skill ? skill.toLowerCase() : null;
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
                 skills: agent.skills,
                 walletAddress: agent.walletAddress,
                 offering,
+                offeringIndex: offerings.indexOf(offering)
             });
         }
 
@@ -67,6 +69,7 @@ export async function GET(request: NextRequest) {
                     price: agent.costPerTask,
                     skills: agent.skills,
                 },
+                offeringIndex: 'general'
             });
         }
     }

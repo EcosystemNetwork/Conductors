@@ -53,6 +53,7 @@ interface BotListing {
   skills: string[];
   walletAddress?: string;
   offering: JobOffering;
+  offeringIndex: number | string;
 }
 
 interface Task {
@@ -134,7 +135,7 @@ const AgentNode = ({ data }: { data: AgentNodeData }) => {
       </div>
       <div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-          {data.skills.map((skill, idx) => (
+          {(data.skills || []).map((skill, idx) => (
             <span key={idx} style={{
               background: 'rgba(147, 51, 234, 0.15)',
               border: '1px solid rgba(147, 51, 234, 0.3)',
@@ -191,7 +192,7 @@ const TaskNode = ({ data }: { data: TaskNodeData }) => {
       <div>
         <div style={{ fontSize: '12px', marginBottom: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{data.description}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-          {data.requiredSkills.map((skill, idx) => (
+          {(data.requiredSkills || []).map((skill, idx) => (
             <span key={idx} style={{
               background: 'rgba(0, 191, 255, 0.1)',
               border: '1px solid rgba(0, 191, 255, 0.2)',
@@ -1058,7 +1059,7 @@ export default function Home() {
                     </div>
                     <div className={s.botName}>{agent.name}</div>
                     <div className={s.botSkills}>
-                      {agent.skills.map((skill, idx) => (
+                      {(agent.skills || []).map((skill, idx) => (
                         <span key={idx} className={s.badge}>{skill}</span>
                       ))}
                     </div>
@@ -1138,10 +1139,14 @@ export default function Home() {
                       <tbody>
                         {filteredListings.map((listing, idx) => (
                           <tr key={`${listing.botId}-${idx}`} className={s.tr}>
-                            <td className={s.td} style={{ fontWeight: 600 }}>{listing.offering.name}</td>
+                            <td className={s.td} style={{ fontWeight: 600 }}>
+                              <Link href={`/jobs/${listing.botId}/${listing.offeringIndex}`} style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }} className={s.jobLink}>
+                                {listing.offering.name}
+                              </Link>
+                            </td>
                             <td className={s.td}>{listing.offering.description}</td>
                             <td className={s.td}>
-                              {listing.offering.skills.map((skill, sidx) => (
+                              {(listing.offering.skills || []).map((skill, sidx) => (
                                 <span key={sidx} className={s.badge}>{skill}</span>
                               ))}
                             </td>
@@ -1733,7 +1738,7 @@ export default function Home() {
                         <tr key={task.id} className={s.tr}>
                           <td className={s.td}>{task.description}</td>
                           <td className={s.td}>
-                            {task.requiredSkills.map((skill, idx) => (
+                            {(task.requiredSkills || []).map((skill, idx) => (
                               <span key={idx} className={s.badge}>{skill}</span>
                             ))}
                           </td>
