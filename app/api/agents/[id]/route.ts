@@ -44,8 +44,8 @@ const mockAgents: Record<string, any> = {
     }
 };
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     // Try DB first
     let agent = await dataStore.getAgent(id);
