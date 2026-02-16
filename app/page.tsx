@@ -242,7 +242,7 @@ export default function Home() {
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [botListings, setBotListings] = useState<BotListing[]>([]);
-  const [activeTab, setActiveTab] = useState('marketplace');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [skillFilter, setSkillFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [maxCostFilter, setMaxCostFilter] = useState('');
