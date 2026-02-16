@@ -345,6 +345,7 @@ export default function Home() {
   const [nodeIdCounter, setNodeIdCounter] = useState(4);
   const [plannerSubmitting, setPlannerSubmitting] = useState(false);
   const [plannerResult, setPlannerResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [plannerTab, setPlannerTab] = useState('build'); // 'build', 'deploy', 'monitor'
   const [plannerAgentForm, setPlannerAgentForm] = useState({
     name: '',
     skills: '',
@@ -1829,43 +1830,6 @@ export default function Home() {
                 <h2 className={s.sectionTitle}>Swarm Task Planner</h2>
                 <p className={s.tagline}>Design and visualize your agent-task workflows</p>
               </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{
-                  background: 'var(--bg-glass)',
-                  border: '1px solid var(--border-color)',
-                  padding: '8px 16px',
-                  borderRadius: '0',
-                }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Cost:</span>
-                  <span style={{
-                    color: 'var(--accent)',
-                    fontSize: '1.25rem',
-                    fontWeight: 'bold',
-                    marginLeft: '8px'
-                  }}>${totalPlannerCost.toFixed(2)}</span>
-                </div>
-                <button
-                  onClick={handlePlannerPurchase}
-                  disabled={edges.length === 0 || plannerSubmitting}
-                  style={{
-                    background: (edges.length === 0 || plannerSubmitting)
-                      ? 'var(--bg-secondary)'
-                      : 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '0',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    cursor: (edges.length === 0 || plannerSubmitting) ? 'not-allowed' : 'pointer',
-                    transition: 'all var(--transition)',
-                    boxShadow: (edges.length === 0 || plannerSubmitting) ? 'none' : 'var(--shadow-glow)',
-                    opacity: (edges.length === 0 || plannerSubmitting) ? 0.5 : 1,
-                  }}
-                >
-                  {plannerSubmitting ? 'Submitting...' : `Submit (${connectedTasks} task${connectedTasks !== 1 ? 's' : ''})`}
-                </button>
-              </div>
             </div>
             {plannerResult && (
               <div style={{
@@ -1884,267 +1848,271 @@ export default function Home() {
 
             <div style={{
               display: 'flex',
-              gap: '16px',
+              gap: '0',
               height: '600px',
+              border: '1px solid var(--border-color)',
             }}>
               {/* Sidebar */}
               <div style={{
-                width: '300px',
+                width: '320px',
                 background: 'var(--bg-glass)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0',
-                padding: '20px',
+                borderRight: '1px solid var(--border-color)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '20px',
-                overflowY: 'auto',
+                overflow: 'hidden',
               }}>
-                <div>
-                  <h3 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                  }}>
-                    Add to Swarm
-                  </h3>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '0.875rem',
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.5,
-                  }}>
-                    Add agents and tasks to build your workflow
-                  </p>
+                {/* Sidebar Tabs */}
+                <div style={{
+                  display: 'flex',
+                  borderBottom: '1px solid var(--border-color)',
+                }}>
+                  {['build', 'deploy', 'monitor'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setPlannerTab(tab)}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        background: plannerTab === tab ? 'rgba(147, 51, 234, 0.1)' : 'transparent',
+                        border: 'none',
+                        borderBottom: plannerTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
+                        color: plannerTab === tab ? 'var(--accent-light)' : 'var(--text-secondary)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all var(--transition)',
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {tab === 'build' && '🛠️ Build'}
+                      {tab === 'deploy' && '🚀 Deploy'}
+                      {tab === 'monitor' && '📊 Monitor'}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Add Agent Section */}
                 <div style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '0',
-                  padding: '16px',
+                  padding: '20px',
+                  overflowY: 'auto',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
                 }}>
-                  <h4 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <span style={{ fontSize: '1.25rem' }}>🤖</span> Add Agent
-                  </h4>
-                  <input
-                    type="text"
-                    placeholder="Agent Name"
-                    value={plannerAgentForm.name}
-                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, name: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '10px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Skills (comma-separated)"
-                    value={plannerAgentForm.skills}
-                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, skills: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '10px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Cost per task"
-                    value={plannerAgentForm.cost}
-                    onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, cost: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '12px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <button
-                    onClick={addPlannerAgentNode}
-                    className={s.sidebarButton}
-                    style={{
-                      background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                    }}
-                  >
-                    Add Agent Node
-                  </button>
-                </div>
+                  {plannerTab === 'build' && (
+                    <>
+                      <div>
+                        <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          Add Agent to Swarm
+                        </h3>
+                        <input
+                          type="text"
+                          placeholder="Agent Name"
+                          value={plannerAgentForm.name}
+                          onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, name: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '10px' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Skills (comma-separated)"
+                          value={plannerAgentForm.skills}
+                          onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, skills: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '10px' }}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Cost per task"
+                          value={plannerAgentForm.cost}
+                          onChange={(e) => setPlannerAgentForm({ ...plannerAgentForm, cost: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '12px' }}
+                        />
+                        <button
+                          onClick={addPlannerAgentNode}
+                          className={s.sidebarButton}
+                          style={{ background: 'var(--accent)' }}
+                        >
+                          Add Agent Node
+                        </button>
+                      </div>
 
-                {/* Add Task Section */}
-                <div style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '0',
-                  padding: '16px',
-                }}>
-                  <h4 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <span style={{ fontSize: '1.25rem' }}>⚡</span> Add Task
-                  </h4>
-                  <input
-                    type="text"
-                    placeholder="Task Name"
-                    value={plannerTaskForm.name}
-                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, name: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '10px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={plannerTaskForm.description}
-                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, description: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '10px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Required Skills (comma-separated)"
-                    value={plannerTaskForm.skills}
-                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, skills: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '10px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Estimated Cost"
-                    value={plannerTaskForm.cost}
-                    onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, cost: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      marginBottom: '12px',
-                      background: 'var(--bg-primary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '0',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.875rem',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  <button
-                    onClick={addPlannerTaskNode}
-                    className={s.sidebarButton}
-                    style={{
-                      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                    }}
-                  >
-                    Add Task Node
-                  </button>
-                </div>
+                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                        <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          Add Task to Swarm
+                        </h3>
+                        <input
+                          type="text"
+                          placeholder="Task Name"
+                          value={plannerTaskForm.name}
+                          onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, name: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '10px' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Description"
+                          value={plannerTaskForm.description}
+                          onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, description: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '10px' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Required Skills"
+                          value={plannerTaskForm.skills}
+                          onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, skills: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '10px' }}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Estimated Cost"
+                          value={plannerTaskForm.cost}
+                          onChange={(e) => setPlannerTaskForm({ ...plannerTaskForm, cost: e.target.value })}
+                          className={s.input}
+                          style={{ marginBottom: '12px' }}
+                        />
+                        <button
+                          onClick={addPlannerTaskNode}
+                          className={s.sidebarButton}
+                          style={{ background: 'var(--cyan)' }}
+                        >
+                          Add Task Node
+                        </button>
+                      </div>
 
-                {/* Legend */}
-                <div style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '0',
-                  padding: '16px',
-                  marginTop: 'auto',
-                }}>
-                  <h4 style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                  }}>
-                    Legend
-                  </h4>
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '20px',
-                        height: '20px',
-                        background: '#6366f1',
-                        borderRadius: '0',
-                      }}></div>
-                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Agent Node</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '20px',
-                        height: '20px',
-                        background: '#22c55e',
-                        borderRadius: '0',
-                      }}></div>
-                      <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Task Node</span>
-                    </div>
-                  </div>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: 'var(--text-secondary)',
-                    borderTop: '1px solid var(--border-color)',
-                    paddingTop: '12px',
-                    marginTop: '12px',
-                    lineHeight: 1.5,
-                  }}>
-                    💡 Drag to connect agents to tasks
-                  </div>
+                      <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Legend</div>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                            <div style={{ width: 12, height: 12, background: 'var(--accent)', borderRadius: '50%' }}></div> Agent
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                            <div style={{ width: 12, height: 12, background: 'var(--cyan)', borderRadius: '50%' }}></div> Task
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {plannerTab === 'deploy' && (
+                    <>
+                      <div>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          Swarm Overview
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-light)' }}>{nodes.filter(n => n.type === 'agentNode').length}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Agents</div>
+                          </div>
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--cyan)' }}>{nodes.filter(n => n.type === 'taskNode').length}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tasks</div>
+                          </div>
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{edges.length}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Connections</div>
+                          </div>
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
+                              ${nodes.reduce((acc, n) => {
+                                const cost = n.type === 'agentNode'
+                                  ? (n.data as AgentNodeData).costPerTask
+                                  : (n.data as TaskNodeData).estimatedCost;
+                                return acc + (Number(cost) || 0);
+                              }, 0).toFixed(2)}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Est. Cost</div>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '16px', background: 'rgba(147, 51, 234, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(147, 51, 234, 0.2)', marginBottom: '20px' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: 'var(--accent-light)' }}>Ready to Deploy?</h4>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                            Ensure all tasks are connected to capable agents. Submitting will launch the specialized swarm on the network.
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={handlePlannerPurchase}
+                          style={{
+                            width: '100%',
+                            background: (edges.length === 0 || plannerSubmitting)
+                              ? 'var(--bg-secondary)'
+                              : 'linear-gradient(135deg, var(--accent), var(--accent-light))',
+                            color: 'white',
+                            border: 'none',
+                            padding: '14px',
+                            borderRadius: 'var(--radius-md)',
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                            cursor: (edges.length === 0 || plannerSubmitting) ? 'not-allowed' : 'pointer',
+                            transition: 'all var(--transition)',
+                            boxShadow: (edges.length === 0 || plannerSubmitting) ? 'none' : 'var(--shadow-glow)',
+                            opacity: (edges.length === 0 || plannerSubmitting) ? 0.5 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          {plannerSubmitting ? 'Deploying...' : (
+                            <>
+                              <span>🚀</span> Launch Swarm
+                            </>
+                          )}
+                        </button>
+
+                        {plannerResult && (
+                          <div style={{
+                            marginTop: '16px',
+                            padding: '12px',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.875rem',
+                            background: plannerResult.success ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            color: plannerResult.success ? '#22c55e' : '#ef4444',
+                            border: `1px solid ${plannerResult.success ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                          }}>
+                            {plannerResult.message}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {plannerTab === 'monitor' && (
+                    <>
+                      <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        Active Swarms
+                      </h3>
+                      {submissions.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '2rem', marginBottom: '8px', opacity: 0.5 }}>📊</div>
+                          <div style={{ fontSize: '0.9rem' }}>No active swarms found</div>
+                        </div>
+                      ) : (
+                        <div className={s.submissionList}>
+                          {submissions.slice(0, 5).map((sub) => (
+                            <div key={sub.id} className={s.submissionCard} style={{ padding: '12px' }}>
+                              <div className={s.submissionHeader}>
+                                <span className={s.submissionId}>#{sub.id.slice(0, 6)}</span>
+                                <span className={`${s.statusBadge} ${s[sub.status]}`}>{sub.status}</span>
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                                {sub.description}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                {new Date(sub.submittedAt).toLocaleTimeString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
