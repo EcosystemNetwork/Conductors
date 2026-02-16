@@ -17,7 +17,7 @@ const emptyAgentForm = {
 };
 
 export default function OnboardPage() {
-    const { connectedBot, setConnectedBot, botJobResult, setBotJobResult } = useBot();
+    const { connectedBot, setConnectedBot, botJobResult, setBotJobResult, apiKey, setApiKey } = useBot();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [agentForm, setAgentForm] = useState(emptyAgentForm);
     const [botJobForm, setBotJobForm] = useState({
@@ -86,7 +86,10 @@ export default function OnboardPage() {
 
             const response = await fetch('/api/bots/advertise', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(apiKey ? { 'x-api-key': apiKey } : {})
+                },
                 body: JSON.stringify({
                     name: agentForm.name,
                     skills,
@@ -122,7 +125,10 @@ export default function OnboardPage() {
         try {
             const response = await fetch('/api/bots/create-job', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(apiKey ? { 'x-api-key': apiKey } : {})
+                },
                 body: JSON.stringify({
                     botId: connectedBot.id,
                     description: botJobForm.description,

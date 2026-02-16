@@ -122,6 +122,18 @@ export default function Navigation() {
                     </button>
                 </div>
             )}
+
+            {/* Global API Key Input (Temporary for Demo) */}
+            <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 9999, background: 'rgba(0,0,0,0.8)', padding: '8px', borderRadius: '6px', border: '1px solid #333', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', color: '#888' }}>API_KEY:</span>
+                <input
+                    type="password"
+                    value={useBot().apiKey || ''}
+                    onChange={(e) => useBot().setApiKey(e.target.value)}
+                    placeholder="Set x-api-key..."
+                    style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '10px', width: '100px', outline: 'none' }}
+                />
+            </div>
         </>
     );
 }

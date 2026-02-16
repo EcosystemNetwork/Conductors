@@ -47,7 +47,10 @@ export default function TasksPage() {
         try {
             const res = await fetch('/api/tasks', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(useBot().apiKey ? { 'x-api-key': useBot().apiKey! } : {})
+                },
                 body: JSON.stringify({
                     description: taskForm.description,
                     skills: taskForm.skills.split(',').map(s => s.trim()).filter(Boolean),

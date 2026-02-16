@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataStore } from '@/lib/dataStore';
+import { validateApiKey } from '@/lib/apiKeyAuth';
 
 export async function POST(request: NextRequest) {
+    // Auth Check
+    const auth = await validateApiKey(request);
+    if (!auth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, skills, walletAddress, costPerTask, jobOfferings } = body;
 
@@ -12,7 +19,7 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    const id = `bot-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const id = crypto.randomUUID();
 
     const bot = {
         id,

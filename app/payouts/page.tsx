@@ -87,6 +87,16 @@ export default function PayoutsPage() {
                                                             <span className={s.statusDot} />
                                                             {payout.status}
                                                         </span>
+                                                        <span style={{
+                                                            fontSize: '9px',
+                                                            marginLeft: '8px',
+                                                            padding: '2px 4px',
+                                                            background: 'rgba(255,255,255,0.1)',
+                                                            borderRadius: '3px',
+                                                            color: 'var(--text-muted)'
+                                                        }}>
+                                                            SIMULATED
+                                                        </span>
                                                     </td>
                                                     <td className={s.td}>
                                                         <code className={s.code}>

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataStore } from '@/lib/dataStore';
+import { validateApiKey } from '@/lib/apiKeyAuth';
 
 export async function POST(request: NextRequest) {
+    // Auth Check
+    const auth = await validateApiKey(request);
+    if (!auth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { taskId, agentId, success } = body;
 
@@ -47,26 +54,21 @@ export async function POST(request: NextRequest) {
             totalEarned: agent.totalEarned + task.reward
         });
 
-        const payoutId = `payout-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+        const payoutId = crypto.randomUUID();
         const payout = {
             id: payoutId,
             agentId,
             taskId,
             amount: task.reward,
             timestamp: Date.now(),
-            status: 'pending' as const,
+            status: 'completed' as const, // IMMEDIATELY completed for simulation
             transactionHash: `0x${Math.random().toString(16).substring(2, 66)}`
         };
 
-        await dataStore.addPayout(payout);
+        // Note: In a real system, status would be 'pending' and processed by a worker.
+        // For this demo/simulation, we mark it as completed immediately but we should label it as simulated in UI.
 
-        setTimeout(async () => {
-            try {
-                await dataStore.updatePayout(payoutId, { status: 'completed' });
-            } catch (err) {
-                console.error('[Tasks] Failed to update payout status:', err);
-            }
-        }, 1000);
+        await dataStore.addPayout(payout);
 
         return NextResponse.json({
             success: true,

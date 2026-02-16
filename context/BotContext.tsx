@@ -81,6 +81,8 @@ interface BotContextType {
     setConnectedBot: (bot: Agent | null) => void;
     botJobResult: BotJobResult | null;
     setBotJobResult: (result: BotJobResult | null) => void;
+    apiKey: string | null;
+    setApiKey: (key: string | null) => void;
 }
 
 const BotContext = createContext<BotContextType | undefined>(undefined);
@@ -88,6 +90,7 @@ const BotContext = createContext<BotContextType | undefined>(undefined);
 export function BotProvider({ children }: { children: ReactNode }) {
     const [connectedBot, setConnectedBot] = useState<Agent | null>(null);
     const [botJobResult, setBotJobResult] = useState<BotJobResult | null>(null);
+    const [apiKey, setApiKey] = useState<string | null>(null);
 
     // Auto-heartbeat effect
     useEffect(() => {
@@ -114,7 +117,7 @@ export function BotProvider({ children }: { children: ReactNode }) {
     }, [connectedBot]);
 
     return (
-        <BotContext.Provider value={{ connectedBot, setConnectedBot, botJobResult, setBotJobResult }}>
+        <BotContext.Provider value={{ connectedBot, setConnectedBot, botJobResult, setBotJobResult, apiKey, setApiKey }}>
             {children}
         </BotContext.Provider>
     );
