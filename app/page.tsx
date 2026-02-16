@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ConnectButton, useActiveAccount } from 'thirdweb/react';
 import { client } from '@/lib/thirdweb';
+import Link from 'next/link';
 import { ethereum } from 'thirdweb/chains';
 import ReactFlow, {
   Node,
@@ -1104,7 +1105,7 @@ export default function Home() {
             {filteredAgents.length > 0 ? (
               <div className={s.botGrid}>
                 {filteredAgents.map((agent) => (
-                  <div key={agent.id} className={s.botCard}>
+                  <Link href={`/agent/${agent.id}`} key={agent.id} className={s.botCard} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className={s.botCardHeader}>
                       <div className={s.botAvatar}>
                         {agent.name.charAt(0).toUpperCase()}
@@ -1159,7 +1160,7 @@ export default function Home() {
                         <span className={s.statLabel}>Earned</span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
