@@ -248,7 +248,7 @@ export default function Home() {
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [botListings, setBotListings] = useState<BotListing[]>([]);
-  const [activeTab, setActiveTab] = useState('onboard');
+  const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState(emptyAgentForm);
@@ -742,7 +742,7 @@ export default function Home() {
   };
 
   const tabs = [
-    { key: 'browse', label: 'Browse', icon: '◉', href: '/browse' },
+    { key: 'marketplace', label: 'Marketplace', icon: '◉' },
     { key: 'planner', label: 'Swarm Planner', icon: '🎯' },
     { key: 'onboard', label: 'Register Bot', icon: '⬡' },
     { key: 'dashboard', label: 'Dashboard', icon: '◎' },
@@ -843,28 +843,192 @@ export default function Home() {
 
         <nav className={s.nav}>
           {tabs.map((tab) => (
-            tab.href ? (
-              <a
-                key={tab.key}
-                href={tab.href}
-                className={s.navButton}
-                style={{ textDecoration: 'none' }}
-              >
-                {tab.label}
-              </a>
-            ) : (
-              <button
-                key={tab.key}
-                className={`${s.navButton} ${activeTab === tab.key ? s.navButtonActive : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            )
+            <button
+              key={tab.key}
+              className={`${s.navButton} ${activeTab === tab.key ? s.navButtonActive : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
           ))}
         </nav>
 
+        {activeTab === 'marketplace' && (
+          <div className={s.content}>
+            <div className={s.marketplaceHeader}>
+              <h2 className={s.sectionTitle}>Bot Marketplace</h2>
+              <p className={s.tagline}>Browse registered bots and find the right skills for your tasks</p>
+            </div>
 
+            <div className={s.searchBar}>
+              <span className={s.searchIcon}>⌕</span>
+              <input
+                type="text"
+                placeholder="Search bots by skill..."
+                value={skillFilter}
+                onChange={(e) => setSkillFilter(e.target.value)}
+                className={s.searchInput}
+              />
+            </div>
+
+            {allSkills.length > 0 && (
+              <div className={s.skillFilters}>
+                <button
+                  className={`${s.skillChip} ${!skillFilter ? s.skillChipActive : ''}`}
+                  onClick={() => setSkillFilter('')}
+                >
+                  All
+                </button>
+                {allSkills.map((skill) => (
+                  <button
+                    key={skill}
+                    className={`${s.skillChip} ${skillFilter === skill ? s.skillChipActive : ''}`}
+                    onClick={() => setSkillFilter(skillFilter === skill ? '' : skill)}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {filteredAgents.length > 0 ? (
+              <div className={s.botGrid}>
+                {filteredAgents.map((agent) => (
+                  <div key={agent.id} className={s.botCard}>
+                    <div className={s.botCardHeader}>
+                      <div className={s.botAvatar}>
+                        {agent.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {agent.health && (
+                          <span title={`Health: ${agent.health}`} style={{ fontSize: '12px' }}>
+                            {getHealthBadge(agent.health)}
+                          </span>
+                        )}
+                        <span className={`${s.statusBadge} ${getStatusClass(agent.status)}`}>
+                          <span className={s.statusDot} />
+                          {agent.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={s.botName}>{agent.name}</div>
+                    <div className={s.botSkills}>
+                      {agent.skills.map((skill, idx) => (
+                        <span key={idx} className={s.badge}>{skill}</span>
+                      ))}
+                    </div>
+                    {agent.costPerTask && (
+                      <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600, margin: '8px 0 4px' }}>
+                        💰 ${agent.costPerTask}/task
+                      </div>
+                    )}
+                    {agent.jobOfferings && agent.jobOfferings.length > 0 && (
+                      <div style={{ marginTop: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Jobs Offered</div>
+                        {agent.jobOfferings.map((offering, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '4px 0',
+                            fontSize: '12px',
+                          }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>{offering.name}</span>
+                            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>${offering.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className={s.botStats}>
+                      <div className={s.botStatItem}>
+                        <span className={s.statValue}>{agent.tasksCompleted}</span>
+                        <span className={s.statLabel}>Tasks Done</span>
+                      </div>
+                      <div className={s.botStatItem}>
+                        <span className={s.statValue}>{agent.totalEarned.toFixed(2)}</span>
+                        <span className={s.statLabel}>Earned</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={s.emptyState}>
+                <div className={s.emptyIcon}>⬡</div>
+                {agents.length === 0
+                  ? 'No bots in the marketplace yet. Be the first!'
+                  : 'No bots match your filter.'}
+                {agents.length === 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <button className={s.button} onClick={() => setActiveTab('onboard')}>
+                      Register Your Bot
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Job Listings Section */}
+            <div style={{ marginTop: '32px' }}>
+              <h2 className={s.sectionTitle}>
+                Job Listings <span>({filteredListings.length})</span>
+              </h2>
+              <p className={s.tagline} style={{ marginBottom: '16px' }}>
+                Browse jobs that bots can do and their prices
+              </p>
+              {filteredListings.length > 0 ? (
+                <div className={s.tableContainer}>
+                  <div className={s.tableScroll}>
+                    <table className={s.table}>
+                      <thead>
+                        <tr>
+                          <th className={s.th}>Job</th>
+                          <th className={s.th}>Description</th>
+                          <th className={s.th}>Skills</th>
+                          <th className={s.th}>Price</th>
+                          <th className={s.th}>Bot</th>
+                          <th className={s.th}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredListings.map((listing, idx) => (
+                          <tr key={`${listing.botId}-${idx}`} className={s.tr}>
+                            <td className={s.td} style={{ fontWeight: 600 }}>{listing.offering.name}</td>
+                            <td className={s.td}>{listing.offering.description}</td>
+                            <td className={s.td}>
+                              {listing.offering.skills.map((skill, sidx) => (
+                                <span key={sidx} className={s.badge}>{skill}</span>
+                              ))}
+                            </td>
+                            <td className={s.td}>
+                              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '14px' }}>
+                                ${listing.offering.price}
+                              </span>
+                            </td>
+                            <td className={s.td}>{listing.botName}</td>
+                            <td className={s.td}>
+                              <span className={`${s.statusBadge} ${getStatusClass(listing.botStatus)}`}>
+                                <span className={s.statusDot} />
+                                {listing.botStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className={s.emptyState}>
+                  <div className={s.emptyIcon}>💼</div>
+                  {botListings.length === 0
+                    ? 'No job listings yet. Bots can advertise their services via the API.'
+                    : 'No listings match your filter.'}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {activeTab === 'onboard' && (
           <div className={s.content}>
