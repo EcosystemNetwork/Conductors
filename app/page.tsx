@@ -101,82 +101,8 @@ interface Submission {
   };
 }
 
-interface AgentNodeData {
-  label: string;
-  skills: string[];
-  costPerTask: number;
-}
-
-interface TaskNodeData {
-  label: string;
-  description: string;
-  requiredSkills: string[];
-  estimatedCost: number;
-}
-
-type NodeData = AgentNodeData | TaskNodeData;
-
-const initialNodes: Node<NodeData>[] = [
-  {
-    id: '1',
-    type: 'agentNode',
-    position: { x: 50, y: 150 },
-    data: {
-      label: 'Market Scanner',
-      skills: ['scan', 'analyze'],
-      costPerTask: 5
-    },
-  },
-  {
-    id: '2',
-    type: 'taskNode',
-    position: { x: 350, y: 150 },
-    data: {
-      label: 'Scan Yield Farms',
-      description: 'Scan top 10 DeFi protocols for APY > 5%',
-      requiredSkills: ['scan'],
-      estimatedCost: 5
-    },
-  },
-  {
-    id: '3',
-    type: 'agentNode',
-    position: { x: 650, y: 50 },
-    data: {
-      label: 'Risk Analyst',
-      skills: ['audit', 'verify'],
-      costPerTask: 15
-    },
-  },
-  {
-    id: '4',
-    type: 'taskNode',
-    position: { x: 650, y: 250 },
-    data: {
-      label: 'Audit Contracts',
-      description: 'Verify scanner results for rugpull risks',
-      requiredSkills: ['audit'],
-      estimatedCost: 15
-    },
-  },
-  {
-    id: '5',
-    type: 'agentNode',
-    position: { x: 950, y: 150 },
-    data: {
-      label: 'Execution Bot',
-      skills: ['trade', 'execute'],
-      costPerTask: 25
-    },
-  },
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2', animated: true },
-  { id: 'e2-3', source: '2', target: '3', animated: true },
-  { id: 'e3-4', source: '3', target: '4', animated: true },
-  { id: 'e4-5', source: '4', target: '5', animated: true },
-];
+import { NodeData, AgentNodeData, TaskNodeData } from '@/lib/types';
+import { defiScenario } from '@/lib/templates';
 
 // Custom Agent Node Component
 // Custom Agent Node Component
@@ -349,8 +275,8 @@ export default function Home() {
   });
 
   // Swarm Planner state
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [nodeIdCounter, setNodeIdCounter] = useState(4);
   const [plannerSubmitting, setPlannerSubmitting] = useState(false);
   const [plannerResult, setPlannerResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -677,6 +603,14 @@ export default function Home() {
     setPlannerAgentForm({ name: '', skills: '', cost: '10' });
   }, [nodeIdCounter, plannerAgentForm, setNodes]);
 
+  const handleLoadTemplate = () => {
+    if (confirm('Load DeFi Demo Scenario? This will replace your current design.')) {
+      setNodes(defiScenario.nodes);
+      setEdges(defiScenario.edges);
+      setNodeIdCounter(10);
+    }
+  };
+
   const addPlannerTaskNode = useCallback(() => {
     if (!plannerTaskForm.name || !plannerTaskForm.description || !plannerTaskForm.skills) {
       alert('Please fill in all task fields');
@@ -791,8 +725,8 @@ export default function Home() {
           message: `Successfully submitted ${agentResults.length} agent(s) and ${taskResults.length} task(s).`,
         });
         // Reset the planner
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+        setNodes([]);
+        setEdges([]);
         setNodeIdCounter(4);
         fetchData();
       } else {
@@ -1939,6 +1873,44 @@ export default function Home() {
               <div>
                 <h2 className={s.sectionTitle}>Swarm Task Planner</h2>
                 <p className={s.tagline}>Design and visualize your agent-task workflows</p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleLoadTemplate}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--accent)',
+                    background: 'rgba(147, 51, 234, 0.1)',
+                    color: 'var(--accent-light)',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Load Demo
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Clear all nodes?')) {
+                      setNodes([]);
+                      setEdges([]);
+                    }
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-color)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  Clear
+                </button>
               </div>
             </div>
             {plannerResult && (
