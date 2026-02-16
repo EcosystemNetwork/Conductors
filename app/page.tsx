@@ -250,6 +250,8 @@ export default function Home() {
   const [botListings, setBotListings] = useState<BotListing[]>([]);
   const [activeTab, setActiveTab] = useState('marketplace');
   const [skillFilter, setSkillFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [maxCostFilter, setMaxCostFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState(emptyAgentForm);
   const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(null);
@@ -707,12 +709,31 @@ export default function Home() {
   const allSkills = useMemo(() => Array.from(new Set(agents.flatMap(a => a.skills))), [agents]);
 
   const filteredAgents = useMemo(() => {
-    if (!skillFilter) return agents;
-    const lowerFilter = skillFilter.toLowerCase();
-    return agents.filter(agent =>
-      agent.skills.some(skill => skill.toLowerCase().includes(lowerFilter))
-    );
-  }, [agents, skillFilter]);
+    let result = agents;
+
+    // Filter by skill
+    if (skillFilter) {
+      const lowerFilter = skillFilter.toLowerCase();
+      result = result.filter(agent =>
+        agent.skills.some(skill => skill.toLowerCase().includes(lowerFilter))
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      result = result.filter(agent => agent.status === statusFilter);
+    }
+
+    // Filter by max cost
+    if (maxCostFilter) {
+      const maxCost = parseFloat(maxCostFilter);
+      if (!isNaN(maxCost)) {
+        result = result.filter(agent => (agent.costPerTask || 0) <= maxCost);
+      }
+    }
+
+    return result;
+  }, [agents, skillFilter, statusFilter, maxCostFilter]);
 
   const filteredListings = useMemo(() => {
     if (!skillFilter) return botListings;
@@ -860,15 +881,38 @@ export default function Home() {
               <p className={s.tagline}>Browse registered bots and find the right skills for your tasks</p>
             </div>
 
-            <div className={s.searchBar}>
-              <span className={s.searchIcon}>⌕</span>
-              <input
-                type="text"
-                placeholder="Search bots by skill..."
-                value={skillFilter}
-                onChange={(e) => setSkillFilter(e.target.value)}
-                className={s.searchInput}
-              />
+            <div className={s.filterBar}>
+              <div className={s.searchGroup}>
+                <span className={s.searchIcon}>⌕</span>
+                <input
+                  type="text"
+                  placeholder="Search skills..."
+                  value={skillFilter}
+                  onChange={(e) => setSkillFilter(e.target.value)}
+                  className={s.searchInput}
+                />
+              </div>
+
+              <div className={s.filterGroup}>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className={s.filterSelect}
+                >
+                  <option value="all">All Status</option>
+                  <option value="idle">Idle</option>
+                  <option value="busy">Busy</option>
+                  <option value="offline">Offline</option>
+                </select>
+
+                <input
+                  type="number"
+                  placeholder="Max $/task"
+                  value={maxCostFilter}
+                  onChange={(e) => setMaxCostFilter(e.target.value)}
+                  className={s.filterInput}
+                />
+              </div>
             </div>
 
             {allSkills.length > 0 && (
