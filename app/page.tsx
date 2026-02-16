@@ -119,105 +119,171 @@ const initialNodes: Node<NodeData>[] = [
   {
     id: '1',
     type: 'agentNode',
-    position: { x: 100, y: 100 },
+    position: { x: 50, y: 150 },
     data: {
-      label: 'Trading Agent',
-      skills: ['trade', 'analyze'],
-      costPerTask: 10
+      label: 'Market Scanner',
+      skills: ['scan', 'analyze'],
+      costPerTask: 5
     },
   },
   {
     id: '2',
-    type: 'agentNode',
-    position: { x: 100, y: 250 },
+    type: 'taskNode',
+    position: { x: 350, y: 150 },
     data: {
-      label: 'Claw Bot',
-      skills: ['claw', 'pickup', 'sort'],
-      costPerTask: 12
+      label: 'Scan Yield Farms',
+      description: 'Scan top 10 DeFi protocols for APY > 5%',
+      requiredSkills: ['scan'],
+      estimatedCost: 5
     },
   },
   {
     id: '3',
-    type: 'taskNode',
-    position: { x: 450, y: 150 },
+    type: 'agentNode',
+    position: { x: 650, y: 50 },
     data: {
-      label: 'Analyze Market',
-      description: 'Analyze BTC market trends',
-      requiredSkills: ['trade', 'analyze'],
-      estimatedCost: 10
+      label: 'Risk Analyst',
+      skills: ['audit', 'verify'],
+      costPerTask: 15
+    },
+  },
+  {
+    id: '4',
+    type: 'taskNode',
+    position: { x: 650, y: 250 },
+    data: {
+      label: 'Audit Contracts',
+      description: 'Verify scanner results for rugpull risks',
+      requiredSkills: ['audit'],
+      estimatedCost: 15
+    },
+  },
+  {
+    id: '5',
+    type: 'agentNode',
+    position: { x: 950, y: 150 },
+    data: {
+      label: 'Execution Bot',
+      skills: ['trade', 'execute'],
+      costPerTask: 25
     },
   },
 ];
 
-const initialEdges: Edge[] = [];
+const initialEdges: Edge[] = [
+  { id: 'e1-2', source: '1', target: '2', animated: true },
+  { id: 'e2-3', source: '2', target: '3', animated: true },
+  { id: 'e3-4', source: '3', target: '4', animated: true },
+  { id: 'e4-5', source: '4', target: '5', animated: true },
+];
 
+// Custom Agent Node Component
 // Custom Agent Node Component
 const AgentNode = ({ data }: { data: AgentNodeData }) => {
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+      background: 'rgba(19, 17, 26, 0.95)',
+      border: '1px solid var(--border-glow)',
       padding: '16px',
-      borderRadius: '0',
-      minWidth: '200px',
-      color: 'white',
-      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+      borderRadius: 'var(--radius-lg)',
+      minWidth: '220px',
+      color: 'var(--text-primary)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 15px var(--accent-glow)',
+      backdropFilter: 'blur(10px)'
     }}>
-      <Handle type="target" position={Position.Left} style={{ background: '#a5b4fc', border: '2px solid white', width: 16, height: 16 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <span style={{ fontSize: '20px' }}>🤖</span>
-        <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{data.label}</span>
+      <Handle type="target" position={Position.Left} style={{ background: 'var(--accent)', border: '2px solid white', width: 12, height: 12 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+        <div style={{
+          fontSize: '18px',
+          background: 'var(--accent)',
+          width: '32px',
+          height: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%'
+        }}>🤖</div>
+        <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>{data.label}</span>
       </div>
       <div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
           {data.skills.map((skill, idx) => (
             <span key={idx} style={{
-              background: 'rgba(255, 255, 255, 0.2)',
+              background: 'rgba(147, 51, 234, 0.15)',
+              border: '1px solid rgba(147, 51, 234, 0.3)',
+              color: '#d8b4fe',
               padding: '2px 8px',
-              borderRadius: '0',
+              borderRadius: '4px',
               fontSize: '11px',
-              fontWeight: '500'
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em'
             }}>{skill}</span>
           ))}
         </div>
-        <div style={{ fontSize: '12px', opacity: 0.9 }}>💰 ${data.costPerTask}/task</div>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Cost/Task</span>
+          <span style={{ color: 'var(--accent-light)', fontWeight: '600' }}>${data.costPerTask}</span>
+        </div>
       </div>
-      <Handle type="source" position={Position.Right} style={{ background: '#a5b4fc', border: '2px solid white', width: 16, height: 16 }} />
+      <Handle type="source" position={Position.Right} style={{ background: 'var(--accent)', border: '2px solid white', width: 12, height: 12 }} />
     </div>
   );
 };
 
 // Custom Task Node Component
+// Custom Task Node Component
 const TaskNode = ({ data }: { data: TaskNodeData }) => {
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+      background: 'rgba(19, 17, 26, 0.95)',
+      border: '1px solid rgba(0, 191, 255, 0.3)',
       padding: '16px',
-      borderRadius: '0',
-      minWidth: '200px',
-      color: 'white',
-      boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+      borderRadius: 'var(--radius-lg)',
+      minWidth: '220px',
+      color: 'var(--text-primary)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(0, 191, 255, 0.15)',
+      backdropFilter: 'blur(10px)'
     }}>
-      <Handle type="target" position={Position.Left} style={{ background: '#86efac', border: '2px solid white', width: 16, height: 16 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <span style={{ fontSize: '20px' }}>⚡</span>
-        <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{data.label}</span>
+      <Handle type="target" position={Position.Left} style={{ background: 'var(--cyan)', border: '2px solid white', width: 12, height: 12 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', borderBottom: '1px solid rgba(0, 191, 255, 0.2)', paddingBottom: '8px' }}>
+        <div style={{
+          fontSize: '18px',
+          background: 'rgba(0, 191, 255, 0.2)',
+          color: 'var(--cyan)',
+          width: '32px',
+          height: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          border: '1px solid var(--cyan)'
+        }}>⚡</div>
+        <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>{data.label}</span>
       </div>
       <div>
-        <div style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.9 }}>{data.description}</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+        <div style={{ fontSize: '12px', marginBottom: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{data.description}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
           {data.requiredSkills.map((skill, idx) => (
             <span key={idx} style={{
-              background: 'rgba(255, 255, 255, 0.2)',
+              background: 'rgba(0, 191, 255, 0.1)',
+              border: '1px solid rgba(0, 191, 255, 0.2)',
+              color: 'var(--cyan)',
               padding: '2px 8px',
-              borderRadius: '0',
+              borderRadius: '4px',
               fontSize: '11px',
-              fontWeight: '500'
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em'
             }}>{skill}</span>
           ))}
         </div>
-        <div style={{ fontSize: '12px', opacity: 0.9 }}>Est. ${data.estimatedCost}</div>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Reward</span>
+          <span style={{ color: 'var(--success)', fontWeight: '600' }}>${data.estimatedCost}</span>
+        </div>
       </div>
-      <Handle type="source" position={Position.Right} style={{ background: '#86efac', border: '2px solid white', width: 16, height: 16 }} />
+      <Handle type="source" position={Position.Right} style={{ background: 'var(--cyan)', border: '2px solid white', width: 12, height: 12 }} />
     </div>
   );
 };
@@ -2102,20 +2168,19 @@ export default function Home() {
                   connectionRadius={40}
                   fitView
                 >
-                  <Background />
-                  <Controls />
+                  <Background color="#333" gap={20} />
+                  <Controls style={{ fill: 'white' }} />
                   <MiniMap
                     nodeColor={(node) => {
-                      if (node.type === 'agentNode') return '#6366f1';
-                      if (node.type === 'taskNode') return '#22c55e';
+                      if (node.type === 'agentNode') return '#9333ea';
+                      if (node.type === 'taskNode') return '#00bfff';
                       return '#94a3b8';
                     }}
-                    style={{
-                      background: 'var(--bg-glass)',
-                      border: '1px solid var(--border-color)',
-                    }}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+                    maskColor="rgba(0, 0, 0, 0.6)"
                   />
                 </ReactFlow>
+                {/* End React Flow Canvas */}
               </div>
             </div>
           </div>
