@@ -10,6 +10,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Auth & Profile Check matching v1/jobs
+    const allAgents = await dataStore.getAllAgents();
+    const registeredAgent = allAgents.find(a =>
+        (auth.ownerWallet && a.walletAddress === auth.ownerWallet) ||
+        a.name === auth.name
+    );
+
+    if (!registeredAgent) {
+        return NextResponse.json({ error: 'Profile required.' }, { status: 403 });
+    }
+    if (registeredAgent.verificationStatus !== 'approved') {
+        return NextResponse.json({ error: 'Agent not approved.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { description, requiredSkills, reward, priority, maxRetries } = body;
 

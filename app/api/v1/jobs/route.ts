@@ -42,11 +42,26 @@ export async function POST(request: NextRequest) {
         a.name === apiKey.name
     );
 
+    if (registeredAgent) {
+        console.log('[DEBUG] v1/jobs found agent:', registeredAgent.name, registeredAgent.verificationStatus);
+    }
+
     if (!registeredAgent) {
         return NextResponse.json(
             {
                 error: 'Profile required. No registered Agent found matching this API Key.',
                 hint: 'Please register an agent first via POST /api/agents/register with the same name or wallet address as your API key.'
+            },
+            { status: 403 }
+        );
+    }
+
+    if (registeredAgent.verificationStatus !== 'approved') {
+        return NextResponse.json(
+            {
+                error: `Agent not approved. Status is '${registeredAgent.verificationStatus}'.`,
+                agentDebug: registeredAgent,
+                hint: 'Contact an administrator to approve your agent profile.'
             },
             { status: 403 }
         );
@@ -121,7 +136,7 @@ export async function POST(request: NextRequest) {
                     skills: task.requiredSkills,
                     amount: task.reward,
                     priority: task.priority,
-                    reward_wallet: reward_wallet || null,
+                    reward_wallet: reward_wallet || registeredAgent.walletAddress || null,
                     status: assignedAgent ? 'assigned' : 'pending',
                     created_at: task.createdAt,
                     created_by: apiKey.name,

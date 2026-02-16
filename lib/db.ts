@@ -41,7 +41,8 @@ export async function initializeDatabase() {
         health TEXT DEFAULT 'healthy',
         cost_per_task DOUBLE PRECISION,
         job_offerings JSONB,
-        capabilities JSONB
+        capabilities JSONB,
+        verification_status TEXT DEFAULT 'pending'
       )
     `;
 

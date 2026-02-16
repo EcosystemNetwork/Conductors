@@ -25,6 +25,7 @@ interface Agent {
     supportedPaymentMethods?: ('ethereum' | 'x402')[];
     description?: string;
   };
+  verificationStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 interface Task {
@@ -104,6 +105,7 @@ function rowToAgent(row: any): Agent {
     costPerTask: row.cost_per_task || undefined,
     jobOfferings: row.job_offerings || undefined,
     capabilities: row.capabilities || undefined,
+    verificationStatus: row.verification_status || 'pending',
   };
 }
 
@@ -193,8 +195,8 @@ class DataStore {
   async addAgent(agent: Agent): Promise<void> {
     await this.ensureInitialized();
     await sql`
-      INSERT INTO agents (id, name, skills, status, registered_at, tasks_completed, total_earned, wallet_address, last_heartbeat, health, cost_per_task, job_offerings, capabilities)
-      VALUES (${agent.id}, ${agent.name}, ${agent.skills}, ${agent.status}, ${agent.registeredAt}, ${agent.tasksCompleted}, ${agent.totalEarned}, ${agent.walletAddress || null}, ${agent.lastHeartbeat || null}, ${agent.health || null}, ${agent.costPerTask || null}, ${agent.jobOfferings ? JSON.stringify(agent.jobOfferings) : null}::jsonb, ${agent.capabilities ? JSON.stringify(agent.capabilities) : null}::jsonb)
+      INSERT INTO agents (id, name, skills, status, registered_at, tasks_completed, total_earned, wallet_address, last_heartbeat, health, cost_per_task, job_offerings, capabilities, verification_status)
+      VALUES (${agent.id}, ${agent.name}, ${agent.skills}, ${agent.status}, ${agent.registeredAt}, ${agent.tasksCompleted}, ${agent.totalEarned}, ${agent.walletAddress || null}, ${agent.lastHeartbeat || null}, ${agent.health || null}, ${agent.costPerTask || null}, ${agent.jobOfferings ? JSON.stringify(agent.jobOfferings) : null}::jsonb, ${agent.capabilities ? JSON.stringify(agent.capabilities) : null}::jsonb, ${agent.verificationStatus || 'pending'})
     `;
   }
 
@@ -228,7 +230,8 @@ class DataStore {
         health = ${merged.health || null},
         cost_per_task = ${merged.costPerTask || null},
         job_offerings = ${merged.jobOfferings ? JSON.stringify(merged.jobOfferings) : null}::jsonb,
-        capabilities = ${merged.capabilities ? JSON.stringify(merged.capabilities) : null}::jsonb
+        capabilities = ${merged.capabilities ? JSON.stringify(merged.capabilities) : null}::jsonb,
+        verification_status = ${merged.verificationStatus}
       WHERE id = ${id}
     `;
   }

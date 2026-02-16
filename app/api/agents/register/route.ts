@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
         registeredAt: Date.now(),
         lastHeartbeat: Date.now(),
         health: 'healthy' as const,
-        jobOfferings: jobOfferings || []
+        jobOfferings: jobOfferings || [],
+        verificationStatus: 'pending' as const
     };
 
     await dataStore.addAgent(agent);
