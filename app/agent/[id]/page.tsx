@@ -248,7 +248,7 @@ export default function AgentDetailsPage() {
                 <div style={{ marginBottom: '40px' }}>
                     <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>Skills</h3>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                        {agent.skills.map(skill => (
+                        {(agent.skills || []).map(skill => (
                             <span key={skill} style={{
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 padding: '8px 16px',
@@ -267,7 +267,7 @@ export default function AgentDetailsPage() {
                     <div style={{ marginBottom: '40px' }}>
                         <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>Services Offered</h3>
                         <div style={{ display: 'grid', gap: '16px' }}>
-                            {agent.jobOfferings.map((job, idx) => (
+                            {(agent.jobOfferings || []).map((job, idx) => (
                                 <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                         <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>{job.name}</span>
@@ -306,7 +306,7 @@ export default function AgentDetailsPage() {
                         <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No task history available.</p>
                     ) : (
                         <div style={{ display: 'grid', gap: '12px' }}>
-                            {history.slice(0, 10).map(task => (
+                            {(history || []).slice(0, 10).map(task => (
                                 <div key={task.id} style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
