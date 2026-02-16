@@ -248,15 +248,7 @@ export default function Home() {
   const [maxCostFilter, setMaxCostFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState(emptyAgentForm);
-  const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('conductor_connectedBot');
-        return saved ? JSON.parse(saved) : null;
-      } catch { return null; }
-    }
-    return null;
-  });
+  const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(null);
   const [botJobForm, setBotJobForm] = useState({
     description: '',
     requiredSkills: '',
@@ -337,15 +329,25 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Persist connectedBot to localStorage
+  // Restore connectedBot from localStorage after hydration (client-only)
+  const [botRestored, setBotRestored] = useState(false);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('conductor_connectedBot');
+      if (saved) setConnectedBot(JSON.parse(saved));
+    } catch { /* ignore */ }
+    setBotRestored(true);
+  }, []);
+
+  // Persist connectedBot to localStorage (only after initial restore)
+  useEffect(() => {
+    if (!botRestored) return;
     if (connectedBot) {
       localStorage.setItem('conductor_connectedBot', JSON.stringify(connectedBot));
     } else {
       localStorage.removeItem('conductor_connectedBot');
     }
-  }, [connectedBot]);
+  }, [connectedBot, botRestored]);
 
   // Auto-heartbeat when bot is connected
   useEffect(() => {
@@ -397,7 +399,7 @@ export default function Home() {
 
       if (response.ok) {
         const result = await response.json();
-        const registeredBot = result.agent;
+        const registeredBot = result.bot;
         setConnectedBot({
           id: registeredBot.id,
           name: registeredBot.name,
@@ -1211,8 +1213,8 @@ export default function Home() {
                     className={s.input}
                     required
                   />
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
                       <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
                         Reward ($)
                       </label>
@@ -1222,10 +1224,11 @@ export default function Home() {
                         value={botJobForm.reward}
                         onChange={(e) => setBotJobForm({ ...botJobForm, reward: e.target.value })}
                         className={s.input}
+                        style={{ width: '100%' }}
                         required
                       />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div>
                       <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>
                         Priority (1=High, 5=Low)
                       </label>
@@ -1237,6 +1240,7 @@ export default function Home() {
                         value={botJobForm.priority}
                         onChange={(e) => setBotJobForm({ ...botJobForm, priority: e.target.value })}
                         className={s.input}
+                        style={{ width: '100%' }}
                         required
                       />
                     </div>
