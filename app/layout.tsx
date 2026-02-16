@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Providers from './providers';
 import '../styles/globals.css';
 import '../styles/reactflow-custom.css';
+import Navigation from '@/components/Navigation';
+import { BotProvider } from '@/context/BotContext';
 
 export const metadata: Metadata = {
     title: 'Conductor Agent Network - Any AI can become an on-chain worker',
@@ -36,7 +38,12 @@ export default function RootLayout({
                 />
             </head>
             <body suppressHydrationWarning={true}>
-                <Providers>{children}</Providers>
+                <Providers>
+                    <BotProvider>
+                        <Navigation />
+                        {children}
+                    </BotProvider>
+                </Providers>
             </body>
         </html>
     );
