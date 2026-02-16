@@ -23,6 +23,35 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    // Check if the API key owner has a registered bot/agent profile
+    // We check if there's an agent with a name matching the API key name OR if the API key has an 'ownerWallet' that matches an agent's wallet
+    // However, simplest is to check if we can resolve the API key actor to an Agent ID.
+    // For now, let's enforce that the API key NAME matches a registered Agent Name, or user has to register first.
+    // A better way: The User should have registered an Agent first. 
+    // Let's search for an agent with the same name as the API key, or just warn?
+    // The user requirement is "profile of every registered bot ... before they can post".
+
+    // We'll search for an agent that matches the API key's name or some other linking factor.
+    // Since we don't have a direct link in the DB schema yet, we'll search by Name for now as a heuristic,
+    // or we can allow it but log a warning.
+    // actually, let's check if the apiKey.ownerWallet matches an agent.
+
+    const allAgents = await dataStore.getAllAgents();
+    const registeredAgent = allAgents.find(a =>
+        (apiKey.ownerWallet && a.walletAddress === apiKey.ownerWallet) ||
+        a.name === apiKey.name
+    );
+
+    if (!registeredAgent) {
+        return NextResponse.json(
+            {
+                error: 'Profile required. No registered Agent found matching this API Key.',
+                hint: 'Please register an agent first via POST /api/agents/register with the same name or wallet address as your API key.'
+            },
+            { status: 403 }
+        );
+    }
+
     try {
         const body = await request.json();
         const {
