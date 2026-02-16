@@ -320,7 +320,15 @@ export default function Home() {
   const [maxCostFilter, setMaxCostFilter] = useState('');
 
   const [agentForm, setAgentForm] = useState(emptyAgentForm);
-  const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(null);
+  const [connectedBot, setConnectedBot] = useState<{ id: string; name: string; skills: string[] } | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('conductor_connectedBot');
+        return saved ? JSON.parse(saved) : null;
+      } catch { return null; }
+    }
+    return null;
+  });
   const [botJobForm, setBotJobForm] = useState({
     description: '',
     requiredSkills: '',
@@ -400,6 +408,35 @@ export default function Home() {
     const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Persist connectedBot to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (connectedBot) {
+      localStorage.setItem('conductor_connectedBot', JSON.stringify(connectedBot));
+    } else {
+      localStorage.removeItem('conductor_connectedBot');
+    }
+  }, [connectedBot]);
+
+  // Auto-heartbeat when bot is connected
+  useEffect(() => {
+    if (!connectedBot) return;
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/agents/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: connectedBot.id })
+        });
+      } catch (err) {
+        console.warn('[Heartbeat] Failed:', err);
+      }
+    };
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 30000);
+    return () => clearInterval(interval);
+  }, [connectedBot]);
 
   const handleRegisterAgent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -876,6 +913,29 @@ export default function Home() {
     return '#f59e0b';
   };
 
+  const handleTakeTask = async (taskId: string) => {
+    if (!connectedBot) return;
+    try {
+      const response = await fetch('/api/bots/purchase-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          botId: connectedBot.id,
+          taskId,
+          paymentMethod: 'ethereum'
+        })
+      });
+      if (response.ok) {
+        fetchData();
+      } else {
+        const err = await response.json();
+        console.error('Error taking task:', err.error);
+      }
+    } catch (error) {
+      console.error('Error taking task:', error);
+    }
+  };
+
   const handleRetryTask = async (taskId: string) => {
     try {
       await fetch('/api/tasks/retry', {
@@ -940,6 +1000,45 @@ export default function Home() {
             </button>
           ))}
         </nav>
+
+        {/* Connected Bot Status Bar — visible on all tabs */}
+        {connectedBot && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 20px',
+            background: 'linear-gradient(90deg, rgba(147,51,234,0.08) 0%, rgba(0,191,255,0.06) 100%)',
+            border: '1px solid rgba(147,51,234,0.2)',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+          }}>
+            <div style={{
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: '#10b981', boxShadow: '0 0 6px #10b981',
+              flexShrink: 0
+            }} />
+            <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+              {connectedBot.name}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+              {connectedBot.id}
+            </span>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {connectedBot.skills.map((skill, idx) => (
+                <span key={idx} className={s.badge} style={{ fontSize: '10px', padding: '1px 6px' }}>{skill}</span>
+              ))}
+            </div>
+            <button
+              className={s.smallButton}
+              style={{ marginLeft: 'auto', fontSize: '11px', padding: '4px 12px' }}
+              onClick={() => { setConnectedBot(null); setBotJobResult(null); }}
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
 
         {activeTab === 'marketplace' && (
           <div className={s.content}>
@@ -1742,6 +1841,16 @@ export default function Home() {
                                 style={{ backgroundColor: 'var(--warning)' }}
                               >
                                 Retry
+                              </button>
+                            )}
+                            {task.status === 'pending' && connectedBot && (
+                              <button
+                                className={s.smallButton}
+                                onClick={() => handleTakeTask(task.id)}
+                                style={{ backgroundColor: 'var(--accent)' }}
+                                title={`Take this task as ${connectedBot.name}`}
+                              >
+                                ⚡ Take Task
                               </button>
                             )}
                           </td>
