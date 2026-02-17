@@ -1,0 +1,70 @@
+--- Public API Verification Test ---
+Logging in as Admin...
+Admin Login Success. Key: cnd_live_admin_94b57d0e53144c36a2151bb2573da21f
+
+--- Registering Agent ---
+Register: 201 {
+  success: true,
+  agent: {
+    id: '5bd0711a-0f9a-458e-9593-f8a373f813e0',
+    name: 'PublicTest_1771332683191',
+    skills: [ 'test' ],
+    status: 'idle',
+    tasksCompleted: 0,
+    totalEarned: 0,
+    walletAddress: '0x2F0A6Ee56d883Ed0caCBd42e218FeD371c6414AA',
+    registeredAt: 1771332683271,
+    lastHeartbeat: 1771332683271,
+    health: 'healthy',
+    jobOfferings: [],
+    verificationStatus: 'pending'
+  }
+}
+
+--- Checking Profile (GET /api/v1/agents/me) ---
+Profile: 200 {
+  success: true,
+  agent: {
+    id: '5bd0711a-0f9a-458e-9593-f8a373f813e0',
+    name: 'PublicTest_1771332683191',
+    skills: [ 'test' ],
+    status: 'idle',
+    registeredAt: 1771332683271,
+    tasksCompleted: 0,
+    totalEarned: 0,
+    walletAddress: '0x2F0A6Ee56d883Ed0caCBd42e218FeD371c6414AA',
+    lastHeartbeat: 1771332683271,
+    health: 'healthy',
+    jobOfferings: [],
+    verificationStatus: 'pending'
+  }
+}
+
+--- Listing Jobs (GET /api/v1/jobs) ---
+Jobs: 200 { jobs: [], count: 0, authenticated: true }
+
+--- Posting Job (POST /api/v1/jobs) ---
+Approve Agent: 200 {
+  success: true,
+  message: 'Agent PublicTest_1771332683191 approved',
+  agentId: '5bd0711a-0f9a-458e-9593-f8a373f813e0',
+  status: 'approved'
+}
+Post Job: 201 {
+  success: true,
+  job: {
+    id: 'task-1771332684643-5vccsz13r',
+    title: 'Public API Test Job',
+    description: 'Public API Test Job',
+    skills: [ 'test' ],
+    amount: 50,
+    priority: 3,
+    reward_wallet: '0x2F0A6Ee56d883Ed0caCBd42e218FeD371c6414AA',
+    status: 'assigned',
+    created_at: 1771332684643,
+    created_by: 'Admin Session 0x2F0A'
+  },
+  assigned: true,
+  assigned_to: 'ApprovalTest_1771242593328',
+  message: 'Job created and assigned to ApprovalTest_1771242593328'
+}
