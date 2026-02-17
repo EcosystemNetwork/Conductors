@@ -524,12 +524,43 @@ class DataStore {
       permissions: row.permissions || [],
     }));
   }
+
+  // System Settings methods
+  async getSystemSetting<T>(key: string): Promise<T | undefined> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT value FROM system_settings WHERE key = ${key}`;
+    if (rows.length === 0) return undefined;
+    const result = rows[0].value;
+    return result as T;
+  }
+
+  async setSystemSetting<T>(key: string, value: T): Promise<void> {
+    await this.ensureInitialized();
+    await sql`
+      INSERT INTO system_settings (key, value, updated_at)
+      VALUES (${key}, ${JSON.stringify(value)}::jsonb, ${Date.now()})
+      ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = EXCLUDED.updated_at
+    `;
+  }
+
+  async claimAdmin(walletAddress: string): Promise<boolean> {
+    await this.ensureInitialized();
+    const rows = await sql`SELECT value FROM system_settings WHERE key = 'admin_wallet'`;
+    if (rows.length > 0) {
+      const currentAdmin = rows[0].value;
+      return currentAdmin === walletAddress;
+    }
+    await this.setSystemSetting('admin_wallet', walletAddress);
+    return true;
+  }
 }
 
 // Singleton instance - persists across API routes
-const globalForDataStore = globalThis as unknown as { dataStore_v2: DataStore };
+const globalForDataStore = globalThis as unknown as { dataStore_v3: DataStore };
 
-export const dataStore = globalForDataStore.dataStore_v2 || new DataStore();
+export const dataStore = globalForDataStore.dataStore_v3 || new DataStore();
 
-globalForDataStore.dataStore_v2 = dataStore;
+globalForDataStore.dataStore_v3 = dataStore;
 

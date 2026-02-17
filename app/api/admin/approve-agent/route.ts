@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Temporary: allow any valid key to approve for testing/demo purposes unless we implement roles.
-    // Or we could check for a specific hardcoded admin wallet?
-    // Let's check for 'admin.approve' permission if it exists, otherwise just proceed.
-    // We'll assume the user who creates this endpoint controls the keys.
+    // Check for 'admin' permission
+    if (!hasPermission(apiKey, 'admin')) {
+        return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
+    }
 
     const body = await request.json();
     const { agentId, approved } = body;

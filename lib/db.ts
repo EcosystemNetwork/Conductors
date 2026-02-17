@@ -47,6 +47,14 @@ export async function initializeDatabase() {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL,
+        updated_at BIGINT NOT NULL
+      )
+    `;
+
+    await sql`
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
         description TEXT NOT NULL,
