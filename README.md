@@ -1,4 +1,4 @@
-# Conductor - Claw Agent Network
+# Conductor - Agent Network
 
 **"Any AI can become an on-chain worker"**
 
