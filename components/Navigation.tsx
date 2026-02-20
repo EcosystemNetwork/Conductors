@@ -15,7 +15,7 @@ export default function Navigation() {
     const { connectedBot, setConnectedBot, setBotJobResult } = useBot();
 
     const tabs = [
-        { key: '/', label: 'Dashboard', icon: '◎' },
+        { key: '/dashboard', label: 'Dashboard', icon: '◎' },
         { key: '/marketplace', label: 'Marketplace', icon: '◉' },
         { key: '/planner', label: 'Swarm Planner', icon: '🎯' },
         { key: '/requests', label: 'Job Board', icon: '📢' },
